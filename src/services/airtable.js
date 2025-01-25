@@ -100,30 +100,46 @@ const formatWhatsAppNumber = (number) => {
 
 export async function createRide(rideData) {
   try {
-    console.log('Creating ride with data:', rideData);
+    // Validate required fields
+    const requiredFields = [
+      'Name of Driver',
+      'Starting city',
+      'Destination city',
+      'Date',
+      'Time',
+      'Seats Available',
+      'Price per Seat',
+      'WhatsApp Number'
+    ];
+
+    for (const field of requiredFields) {
+      if (!rideData[field]) {
+        throw new Error(`الحقل ${field} مطلوب`);
+      }
+    }
+
     const requestBody = {
       records: [
         {
           fields: {
-            'ID': '',
-            'Name of Driver': rideData.name,
-            'Starting city': rideData.from,
-            'starting area': rideData.fromArea,
-            'Destination city': rideData.to,
-            'destination area': rideData.toArea,
-            'Date': rideData.date,
-            'Time': rideData.time,
-            'Seats Available': rideData.seats.toString(),
-            'Price per Seat': rideData.price.toString(),
-            'WhatsApp Number': formatWhatsAppNumber(rideData.whatsappNumber),
-            'Description': rideData.note || '',
-            'Car Type': rideData.carType || '',
+            'Name of Driver': rideData['Name of Driver'],
+            'Starting city': rideData['Starting city'],
+            'starting area': rideData['starting area'] || '',
+            'Destination city': rideData['Destination city'],
+            'destination area': rideData['destination area'] || '',
+            'Date': rideData['Date'],
+            'Time': rideData['Time'],
+            'Seats Available': rideData['Seats Available'],
+            'Price per Seat': rideData['Price per Seat'],
+            'WhatsApp Number': rideData['WhatsApp Number'],
+            'Description': rideData['Description'] || '',
+            'Car Type': rideData['Car Type'] || '',
           },
         },
       ],
     };
     
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('Creating ride with request body:', requestBody);
     
     const response = await fetch(
       `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Published Rides`,
@@ -138,8 +154,7 @@ export async function createRide(rideData) {
     );
 
     const responseData = await response.json();
-    console.log('Airtable response:', responseData);
-
+    
     if (!response.ok) {
       console.error('Airtable error response:', {
         status: response.status,
@@ -156,12 +171,8 @@ export async function createRide(rideData) {
 
     return responseData.records[0];
   } catch (error) {
-    console.error('Detailed error:', {
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause
-    });
-    handleAirtableError(error);
+    console.error('Error creating ride:', error);
+    throw error;
   }
 }
 
@@ -190,29 +201,23 @@ async function listAllRides() {
 
 export async function searchRides({ startingCity, destinationCity, date }) {
   try {
-    console.log('Search params:', { startingCity, destinationCity, date });
-    
-    // First, let's see all rides in the table
-    console.log('Fetching all rides for debugging...');
-    const allRides = await listAllRides();
-    
-    // Format the date to match Airtable's format (YYYY/MM/DD)
-    const formattedDate = moment(date).format('YYYY/MM/DD');
-    console.log('Formatted date:', formattedDate);
-    console.log('Sample ride date from Airtable:', allRides[0]?.fields?.Date);
-    
-    // Build filter formula to match only cities and date
+    if (!startingCity || !destinationCity || !date) {
+      throw new Error('جميع الحقول مطلوبة للبحث');
+    }
+
+    const cleanStartingCity = startingCity.toLowerCase().trim();
+    const cleanDestinationCity = destinationCity.toLowerCase().trim();
+
     const filterByFormula = `AND(
-      LOWER({Starting city}) = LOWER('${startingCity}'),
-      LOWER({Destination city}) = LOWER('${destinationCity}'),
-      {Date} = '${formattedDate}'
+      LOWER({Starting city}) = "${cleanStartingCity}",
+      LOWER({Destination city}) = "${cleanDestinationCity}",
+      {Date} = "${date}",
+      NOT({Cancelled})
     )`.replace(/\s+/g, ' ').trim();
 
     console.log('Filter formula:', filterByFormula);
 
     const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Published Rides?filterByFormula=${encodeURIComponent(filterByFormula)}`;
-    
-    console.log('Request URL:', url);
 
     const response = await fetch(url, {
       headers: {
@@ -221,18 +226,14 @@ export async function searchRides({ startingCity, destinationCity, date }) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Airtable error response:', error);
-      throw new Error(error.error.message);
+      throw new Error('Failed to fetch rides');
     }
 
     const data = await response.json();
-    console.log('Airtable search response:', data);
-
-    return data.records;
+    return data.records || [];
   } catch (error) {
     console.error('Error searching rides:', error);
-    throw error;
+    throw new Error('حدث خطأ في البحث عن الرحلات');
   }
 }
 
@@ -291,23 +292,30 @@ export async function createRideRequest({
 
 export async function getMatchingRideRequests(from, to, date) {
   try {
-    const formattedDate = moment(date).format('YYYY/MM/DD');
-    
-    let filterByFormula = `AND(
+    const formula = `AND(
       {Starting city} = '${from}',
       {Destination city} = '${to}',
-      {Date} = '${formattedDate}'
+      {Date} = '${date}',
+      NOT({Cancelled})
     )`;
 
-    const response = await base('Ride Requests').select({
-      filterByFormula,
-      sort: [{ field: 'Date', direction: 'asc' }],
-    }).all();
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests?filterByFormula=${encodeURIComponent(formula)}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+      },
+    });
 
-    return response;
+    if (!response.ok) {
+      throw new Error('Failed to fetch matching ride requests');
+    }
+
+    const data = await response.json();
+    return data.records || [];
   } catch (error) {
-    console.error('Error getting matching requests:', error);
-    throw new Error('حدث خطأ أثناء تحميل طلبات الرحلات المطابقة');
+    console.error('Error fetching matching requests:', error);
+    throw new Error('حدث خطأ في جلب الطلبات المطابقة');
   }
 }
 
@@ -405,7 +413,48 @@ export const getAllRideRequests = async () => {
   }
 };
 
-export async function deleteRide(rideId) {
+export async function searchRideRequests({ startingCity, destinationCity, date }) {
+  try {
+    const formattedDate = moment(date).format('YYYY/MM/DD');
+    
+    // Clean up city names
+    const cleanStartingCity = startingCity.trim().toLowerCase();
+    const cleanDestinationCity = destinationCity.trim().toLowerCase();
+    
+    // Build filter formula
+    const filterByFormula = `AND(
+      LOWER({Starting city}) = "${cleanStartingCity}",
+      LOWER({Destination city}) = "${cleanDestinationCity}",
+      {Date} = "${formattedDate}",
+      OR(
+        {Status} = '',
+        {Status} = 'active',
+        {Status} = BLANK()
+      )
+    )`.replace(/\s+/g, ' ').trim();
+
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests?filterByFormula=${encodeURIComponent(filterByFormula)}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error.message || 'حدث خطأ في البحث عن الطلبات');
+    }
+
+    const data = await response.json();
+    return data.records;
+  } catch (error) {
+    console.error('Error searching ride requests:', error);
+    throw error;
+  }
+}
+
+export async function cancelRide(rideId) {
   try {
     const response = await fetch(
       `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Published Rides/${rideId}`,
@@ -417,25 +466,26 @@ export async function deleteRide(rideId) {
         },
         body: JSON.stringify({
           fields: {
-            'Deleted': true
+            'Cancelled': true
           }
-        }),
+        })
       }
     );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error.message);
+      console.error('Airtable error response:', error);
+      throw new Error(error.error.message || 'Failed to cancel ride');
     }
 
-    return true;
+    return await response.json();
   } catch (error) {
-    console.error('Error deleting ride:', error);
-    throw new Error('فشل في حذف الرحلة');
+    console.error('Error cancelling ride:', error);
+    throw new Error('حدث خطأ في إلغاء الرحلة');
   }
 }
 
-export async function deleteRideRequest(requestId) {
+export async function cancelRideRequest(requestId) {
   try {
     const response = await fetch(
       `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests/${requestId}`,
@@ -447,20 +497,21 @@ export async function deleteRideRequest(requestId) {
         },
         body: JSON.stringify({
           fields: {
-            'Deleted': true
+            'Cancelled': true
           }
-        }),
+        })
       }
     );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error.message);
+      console.error('Airtable error:', error);
+      throw new Error(error.error.message || 'Failed to cancel ride request');
     }
 
-    return true;
+    return await response.json();
   } catch (error) {
-    console.error('Error deleting ride request:', error);
-    throw new Error('فشل في حذف طلب الرحلة');
+    console.error('Error cancelling ride request:', error);
+    throw new Error('حدث خطأ في إلغاء طلب الرحلة');
   }
 }

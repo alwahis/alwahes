@@ -9,7 +9,6 @@ import {
   Button,
   Box,
   Alert,
-  CircularProgress,
 } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import Layout from '../components/Layout';
@@ -31,29 +30,20 @@ const MatchingRequests = () => {
   useEffect(() => {
     const loadRequests = async () => {
       if (!rideData) {
-        console.error('No ride data provided');
         navigate('/');
         return;
       }
 
       try {
-        setLoading(true);
-        setError('');
-        console.log('Loading requests for:', rideData);
-        
         const data = await getMatchingRideRequests(
           rideData.from,
           rideData.to,
           rideData.date
         );
-
-        console.log('Received requests:', data);
-        setRequests(data || []);
-        setError('');
+        setRequests(data);
       } catch (error) {
         console.error('Error loading requests:', error);
-        setError(error.message || 'حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة مرة أخرى.');
-        setRequests([]);
+        setError('حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة مرة أخرى.');
       } finally {
         setLoading(false);
       }
@@ -63,54 +53,38 @@ const MatchingRequests = () => {
   }, [rideData, navigate]);
 
   const formatWhatsAppNumber = (number) => {
-    if (!number) return '';
-    
-    // Remove any non-digit characters
     let cleaned = number.replace(/\D/g, '');
-    
-    // Remove leading zeros
-    cleaned = cleaned.replace(/^0+/, '');
-    
-    // If number starts with 7, add Iraq country code
-    if (cleaned.startsWith('7')) {
+    if (!cleaned.startsWith('964')) {
+      cleaned = cleaned.replace(/^0+/, '');
       cleaned = '964' + cleaned;
     }
-    // If number doesn't have country code, add Iraq country code
-    else if (!cleaned.startsWith('964')) {
-      cleaned = '964' + cleaned;
-    }
-    
     return cleaned;
   };
 
   const formatRequest = (request) => {
-    if (!request?.fields) {
-      console.error('Invalid request data:', request);
-      return null;
-    }
-
     return {
       id: request.id,
-      startingCity: request.fields['Starting city'] || '',
-      startingArea: request.fields['starting area'] || '',
-      destinationCity: request.fields['Destination city'] || '',
-      destinationArea: request.fields['destination area'] || '',
-      date: request.fields['Date'] || '',
-      seats: request.fields['Seats'] || '',
-      whatsappNumber: request.fields['WhatsApp Number'] || '',
-      note: request.fields['Note'] || ''
+      startingCity: request.fields['Starting city'],
+      startingArea: request.fields['starting area'],
+      destinationCity: request.fields['Destination city'],
+      destinationArea: request.fields['destination area'],
+      date: request.fields['Date'],
+      seats: request.fields['Seats'],
+      whatsappNumber: request.fields['WhatsApp Number'],
+      note: request.fields['Note']
     };
   };
 
   const createWhatsAppMessage = (request) => {
-    const formattedRequest = formatRequest(request);
-    const message = `السلام عليكم 🌟
+    const message = `السلام عليكم 
 
-عندي رحلة من ${rideData.from} إلى ${rideData.to}
-- التاريخ: ${moment(rideData.date).format('DD/MM/YYYY')}
-- الوقت: ${rideData.time || 'سيتم تحديده لاحقاً'}
+أني سائق على تطبيق عالواهس.
+شفت طلب رحلتك وأريد أخبرك أنه عندي رحلة تناسبك:
+- من ${rideData.from}
+- إلى ${rideData.to}
+- بتاريخ ${moment(rideData.date).format('LL')}
 
-هل تريد الحجز؟ 🚗`;
+هل تريد تفاصيل أكثر؟`;
 
     return encodeURIComponent(message);
   };
@@ -118,20 +92,8 @@ const MatchingRequests = () => {
   if (loading) {
     return (
       <Layout>
-        <Container maxWidth="md">
-          <Box 
-            sx={{ 
-              mt: 4, 
-              mb: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2
-            }}
-          >
-            <CircularProgress />
-            <Typography>جاري تحميل الطلبات المطابقة...</Typography>
-          </Box>
+        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+          <Typography align="center">جاري تحميل الطلبات المطابقة...</Typography>
         </Container>
       </Layout>
     );
@@ -157,47 +119,28 @@ const MatchingRequests = () => {
         </Box>
 
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              '& .MuiAlert-message': {
-                width: '100%',
-                textAlign: 'center'
-              }
-            }}
-          >
+          <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
 
         {requests.length === 0 ? (
-          <Alert 
-            severity="info"
-            sx={{ 
-              '& .MuiAlert-message': {
-                width: '100%',
-                textAlign: 'center'
-              }
-            }}
-          >
-            لا توجد طلبات مطابقة لرحلتك حالياً
+          <Alert severity="info">
+            سيتواصل معك الركاب قريباً عبر الواتساب، يرجى البقاء متصلاً
           </Alert>
         ) : (
           <Grid container spacing={3}>
             {requests.map((request) => {
               const formattedRequest = formatRequest(request);
-              if (!formattedRequest) return null;
-              
               return (
                 <Grid item xs={12} key={formattedRequest.id}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        {formattedRequest.startingCity} → {formattedRequest.destinationCity}
+                        {formattedRequest.startingCity} إلى {formattedRequest.destinationCity}
                       </Typography>
                       <Typography>
-                        المنطقة: {formattedRequest.startingArea || 'غير محدد'} → {formattedRequest.destinationArea || 'غير محدد'}
+                        المنطقة: {formattedRequest.startingArea || 'غير محدد'} إلى {formattedRequest.destinationArea || 'غير محدد'}
                       </Typography>
                       <Typography>التاريخ: {moment(formattedRequest.date).format('LL')}</Typography>
                       <Typography>عدد المقاعد: {formattedRequest.seats}</Typography>
@@ -205,30 +148,17 @@ const MatchingRequests = () => {
                         <Typography>ملاحظات: {formattedRequest.note}</Typography>
                       )}
                       {formattedRequest.whatsappNumber && (
-                        <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                          <Button
-                            variant="contained"
-                            color="success"
-                            startIcon={<WhatsAppIcon />}
-                            href={`https://wa.me/${formatWhatsAppNumber(formattedRequest.whatsappNumber)}?text=${createWhatsAppMessage(request)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            fullWidth
-                          >
-                            تواصل عبر واتساب
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            color="success"
-                            onClick={() => {
-                              // Copy number to clipboard
-                              const number = formatWhatsAppNumber(formattedRequest.whatsappNumber);
-                              navigator.clipboard.writeText(number);
-                            }}
-                          >
-                            نسخ الرقم
-                          </Button>
-                        </Box>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<WhatsAppIcon />}
+                          href={`https://wa.me/${formatWhatsAppNumber(formattedRequest.whatsappNumber)}?text=${createWhatsAppMessage(request)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{ mt: 2 }}
+                        >
+                          تواصل عبر واتساب
+                        </Button>
                       )}
                     </CardContent>
                   </Card>
@@ -237,15 +167,6 @@ const MatchingRequests = () => {
             })}
           </Grid>
         )}
-
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/my-rides')}
-          >
-            عرض رحلاتي
-          </Button>
-        </Box>
       </Container>
     </Layout>
   );

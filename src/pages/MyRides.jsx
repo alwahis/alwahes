@@ -22,7 +22,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'react-hot-toast';
 import Layout from '../components/Layout';
-import { getDriverRidesAndRequests, deleteRide, deleteRideRequest } from '../services/airtable';
+import { getDriverRidesAndRequests, cancelRide, cancelRideRequest } from '../services/airtable';
 
 const MyRides = () => {
   const [rides, setRides] = useState([]);
@@ -31,8 +31,6 @@ const MyRides = () => {
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -61,33 +59,34 @@ const MyRides = () => {
     setActiveTab(newValue);
   };
 
-  const handleDelete = async () => {
-    if (!itemToDelete) return;
-
+  const handleCancelRide = async (rideId) => {
     try {
-      setLoading(true);
-      if (itemToDelete.type === 'ride') {
-        await deleteRide(itemToDelete.id);
-        setRides(rides.filter(ride => ride.id !== itemToDelete.id));
-        toast.success('تم حذف الرحلة بنجاح');
-      } else {
-        await deleteRideRequest(itemToDelete.id);
-        setRideRequests(rideRequests.filter(request => request.id !== itemToDelete.id));
-        toast.success('تم حذف الطلب بنجاح');
-      }
+      await cancelRide(rideId);
+      toast.success('تم إلغاء الرحلة بنجاح');
+      // Update the rides list
+      setRides(rides.map(ride => 
+        ride.id === rideId 
+          ? { ...ride, fields: { ...ride.fields, Status: 'cancelled' } }
+          : ride
+      ));
     } catch (error) {
-      console.error('Error deleting item:', error);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
+      toast.error(error.message || 'حدث خطأ في إلغاء الرحلة');
     }
   };
 
-  const handleDeleteClick = (item, type) => {
-    setItemToDelete({ ...item, type });
-    setDeleteDialogOpen(true);
+  const handleCancelRequest = async (requestId) => {
+    try {
+      await cancelRideRequest(requestId);
+      toast.success('تم إلغاء الطلب بنجاح');
+      // Update the requests list
+      setRideRequests(rideRequests.map(request => 
+        request.id === requestId 
+          ? { ...request, fields: { ...request.fields, Status: 'cancelled' } }
+          : request
+      ));
+    } catch (error) {
+      toast.error(error.message || 'حدث خطأ في إلغاء الطلب');
+    }
   };
 
   return (
@@ -137,8 +136,8 @@ const MyRides = () => {
             <>
               <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={activeTab} onChange={handleTabChange} centered>
-                  <Tab label={`طلبات الركاب (${rideRequests.length})`} />
-                  <Tab label={`رحلاتي (${rides.length})`} />
+                  <Tab label={`طلبات الركاب (${rideRequests.filter(r => r.fields.Status !== 'cancelled').length})`} />
+                  <Tab label={`رحلاتي (${rides.filter(r => r.fields.Status !== 'cancelled').length})`} />
                 </Tabs>
               </Box>
 
@@ -172,15 +171,22 @@ const MyRides = () => {
                                     ملاحظات: {request.fields['Note']}
                                   </Typography>
                                 )}
+                                {request.fields.Status === 'cancelled' ? (
+                                  <Typography color="error" sx={{ mt: 2, fontWeight: 'medium' }}>
+                                    ملغي
+                                  </Typography>
+                                ) : (
+                                  <Button
+                                    variant="contained"
+                                    color="error"
+                                    onClick={() => handleCancelRequest(request.id)}
+                                    sx={{ mt: 2 }}
+                                  >
+                                    إلغاء الطلب
+                                  </Button>
+                                )}
                               </Stack>
                             </Box>
-                            <IconButton 
-                              onClick={() => handleDeleteClick(request, 'request')}
-                              color="error"
-                              sx={{ mt: -1, mr: -1 }}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
                           </Box>
                         </CardContent>
                       </Card>
@@ -200,10 +206,10 @@ const MyRides = () => {
                               <Box>
                                 <Stack spacing={1}>
                                   <Typography>
-                                    من: {ride.fields['Starting city']} - {ride.fields['starting area']}
+                                    من: {ride.fields['Starting city']} {ride.fields['starting area']}
                                   </Typography>
                                   <Typography>
-                                    إلى: {ride.fields['Destination city']} - {ride.fields['destination area']}
+                                    إلى: {ride.fields['Destination city']} {ride.fields['Destination area']}
                                   </Typography>
                                   <Typography>
                                     التاريخ: {ride.fields['Date']}
@@ -225,15 +231,22 @@ const MyRides = () => {
                                       ملاحظات: {ride.fields['Description']}
                                     </Typography>
                                   )}
+                                  {ride.fields.Status === 'cancelled' ? (
+                                    <Typography color="error" sx={{ mt: 2, fontWeight: 'medium' }}>
+                                      ملغي
+                                    </Typography>
+                                  ) : (
+                                    <Button
+                                      variant="contained"
+                                      color="error"
+                                      onClick={() => handleCancelRide(ride.id)}
+                                      sx={{ mt: 2 }}
+                                    >
+                                      إلغاء الرحلة
+                                    </Button>
+                                  )}
                                 </Stack>
                               </Box>
-                              <IconButton 
-                                onClick={() => handleDeleteClick(ride, 'ride')}
-                                color="error"
-                                sx={{ mt: -1, mr: -1 }}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
                             </Box>
                           </CardContent>
                         </Card>
@@ -245,29 +258,6 @@ const MyRides = () => {
             </>
           )}
         </Box>
-
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-        >
-          <DialogTitle>
-            {itemToDelete?.type === 'ride' ? 'حذف الرحلة' : 'حذف الطلب'}
-          </DialogTitle>
-          <DialogContent>
-            <Typography>
-              {itemToDelete?.type === 'ride' 
-                ? 'هل أنت متأكد من حذف هذه الرحلة؟'
-                : 'هل أنت متأكد من حذف هذا الطلب؟'
-              }
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>إلغاء</Button>
-            <Button onClick={handleDelete} color="error" autoFocus>
-              حذف
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
     </Layout>
   );

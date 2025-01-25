@@ -11,9 +11,7 @@ import {
   BottomNavigation,
   BottomNavigationAction,
 } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import PersonIcon from '@mui/icons-material/Person';
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import { ArrowForward, Person } from '@mui/icons-material';
 
 const pages = [
   { title: 'البحث عن رحلة', path: '/search-rides' },
@@ -84,7 +82,7 @@ const Layout = ({ children }) => {
                 onClick={() => navigate(-1)}
                 sx={{ ml: 2 }}
               >
-                <ArrowForwardIcon />
+                <ArrowForward />
               </IconButton>
             )}
           </Toolbar>
@@ -147,7 +145,7 @@ const Layout = ({ children }) => {
         >
           <BottomNavigationAction
             label={mobilePages[0].title}
-            icon={<PersonIcon />}
+            icon={<Person />}
           />
         </BottomNavigation>
       </Box>

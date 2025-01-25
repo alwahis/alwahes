@@ -17,10 +17,11 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
+import 'moment/locale/ar';
 import Layout from '../components/Layout';
 import { createRide } from '../services/airtable';
 import { createRideToken } from '../utils/deviceHistory';
-import 'moment/locale/ar';
+import { toast } from 'react-hot-toast';
 
 moment.locale('ar');
 
@@ -59,6 +60,8 @@ function PublishRide() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [requests, setRequests] = useState([]);
+  const [showRequests, setShowRequests] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     from: '',
@@ -103,30 +106,71 @@ function PublishRide() {
     setLoading(true);
 
     try {
+      // Validate required fields
+      if (!formData.name || !formData.from || !formData.to || !formData.date || 
+          !formData.time || !formData.seats || !formData.price || !formData.whatsappNumber) {
+        throw new Error('جميع الحقول المطلوبة يجب ملؤها');
+      }
+
       const rideData = {
-        ...formData,
-        date: formData.date.format('YYYY/MM/DD'),
-        time: formData.time.format('hh:mm A'),
-        displayDate: formatDate(formData.date),
-        displayTime: formatTime(formData.time)
+        'Name of Driver': formData.name,
+        'Starting city': formData.from,
+        'starting area': formData.fromArea || '',
+        'Destination city': formData.to,
+        'destination area': formData.toArea || '',
+        'Date': formData.date.format('YYYY/MM/DD'),
+        'Time': formData.time.format('HH:mm'),
+        'Seats Available': String(formData.seats),
+        'Price per Seat': String(formData.price),
+        'Car Type': formData.carType || '',
+        'WhatsApp Number': formData.whatsappNumber,
+        'Description': formData.note || '',
       };
 
+      console.log('Submitting ride data:', rideData);
       const newRide = await createRide(rideData);
-      createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
-      navigate('/matching-requests', { 
-        state: { 
-          rideId: newRide.id,
-          from: formData.from,
-          to: formData.to,
-          date: formData.date.format('YYYY/MM/DD')
-        } 
-      });
+      
+      if (newRide && newRide.id) {
+        createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
+        toast.success('تم نشر الرحلة بنجاح');
+
+        // Navigate to matching requests page
+        navigate('/matching-requests', {
+          state: {
+            rideId: newRide.id,
+            from: formData.from,
+            to: formData.to,
+            date: formData.date.format('YYYY/MM/DD')
+          }
+        });
+      } else {
+        throw new Error('فشل في إنشاء الرحلة');
+      }
+
     } catch (error) {
       setError(error.message || 'حدث خطأ أثناء نشر الرحلة. يرجى المحاولة مرة أخرى.');
       console.error('Publish error:', error);
-    } finally {
       setLoading(false);
     }
+  };
+
+  const formatWhatsAppNumber = (number) => {
+    if (!number) return '';
+    let cleaned = number.replace(/\D/g, '');
+    cleaned = cleaned.replace(/^(00964|964)/, '');
+    cleaned = cleaned.replace(/^0/, '');
+    return `964${cleaned}`;
+  };
+
+  const createWhatsAppMessage = (request) => {
+    const message = `السلام عليكم 🌟
+لدي رحلة متوفرة تناسب طلبك:
+- من ${request.fields['Starting city']} 
+- إلى ${request.fields['Destination city']}
+- بتاريخ ${moment(request.fields['Date']).format('LL')}
+
+هل ما زلت تبحث عن رحلة؟`;
+    return encodeURIComponent(message);
   };
 
   return (
@@ -404,6 +448,54 @@ function PublishRide() {
                 </Button>
               </Stack>
             </form>
+
+            {showRequests && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h5" gutterBottom align="center">
+                  طلبات الرحلات المتطابقة
+                </Typography>
+                
+                {requests.length === 0 ? (
+                  <Typography align="center" color="text.secondary">
+                    لا توجد طلبات رحلات متطابقة في الوقت الحالي
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {requests.map((request) => (
+                      <Paper key={request.id} sx={{ p: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                          {request.fields['Starting city']} إلى {request.fields['Destination city']}
+                        </Typography>
+                        <Typography color="textSecondary" gutterBottom>
+                          التاريخ: {moment(request.fields['Date']).format('LL')}
+                        </Typography>
+                        <Typography>
+                          عدد المقاعد المطلوبة: {request.fields['Seats']}
+                        </Typography>
+                        {request.fields['Description'] && (
+                          <Typography>
+                            ملاحظات: {request.fields['Description']}
+                          </Typography>
+                        )}
+                        {request.fields['WhatsApp Number'] && (
+                          <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<i className="fa-brands fa-whatsapp" />}
+                            href={`https://wa.me/${formatWhatsAppNumber(request.fields['WhatsApp Number'])}?text=${createWhatsAppMessage(request)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ mt: 2 }}
+                          >
+                            تواصل مع الراكب
+                          </Button>
+                        )}
+                      </Paper>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
         </Container>
       </LocalizationProvider>
