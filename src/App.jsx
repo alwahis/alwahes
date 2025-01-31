@@ -15,6 +15,7 @@ import { Toaster } from 'react-hot-toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ar } from 'date-fns/locale';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
                 },
               }}
             />
+            <Analytics />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/search-rides" element={<SearchRides />} />
