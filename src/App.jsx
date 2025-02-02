@@ -4,7 +4,6 @@ import { CacheProvider } from '@emotion/react';
 import { CssBaseline } from '@mui/material';
 import theme, { cacheRtl } from './theme';
 import Home from './pages/Home';
-import SearchRides from './pages/SearchRides';
 import SearchResults from './pages/SearchResults';
 import PublishRide from './pages/PublishRide';
 import MyRides from './pages/MyRides';
@@ -40,7 +39,6 @@ function App() {
             <Analytics />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/search-rides" element={<SearchRides />} />
               <Route path="/search-results" element={<SearchResults />} />
               <Route path="/results" element={<SearchResults />} />
               <Route path="/publish-ride" element={<PublishRide />} />

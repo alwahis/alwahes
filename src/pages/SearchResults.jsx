@@ -47,20 +47,20 @@ export default function SearchResults() {
         console.log('Raw search params:', searchParams);
 
         if (!searchParams?.startingCity || !searchParams?.destinationCity || !searchParams?.date) {
-          navigate('/search-rides');
+          navigate('/request-ride');
           return;
         }
 
         const results = await searchRides({
           startingCity: searchParams.startingCity,
           destinationCity: searchParams.destinationCity,
-          date: searchParams.date
+          date: searchParams.date,
         });
 
         setRides(results);
-      } catch (error) {
-        console.error('Error fetching rides:', error);
-        setError(error.message || 'حدث خطأ في البحث عن الرحلات');
+      } catch (err) {
+        console.error('Error fetching results:', err);
+        setError('حدث خطأ أثناء البحث عن الرحلات. يرجى المحاولة مرة أخرى.');
       } finally {
         setLoading(false);
       }
@@ -96,31 +96,8 @@ export default function SearchResults() {
           <Box textAlign="center">
             <Typography variant="h6" gutterBottom>لا توجد رحلات متطابقة</Typography>
             <Typography color="text.secondary" sx={{ mb: 4 }}>
-              يمكنك طلب رحلة وسيتواصل معك السائقون قريباً
+              سيتواصل معك السائقون قريباً
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={() => navigate('/request-ride', {
-                state: {
-                  startingCity: searchParams.startingCity,
-                  destinationCity: searchParams.destinationCity,
-                  date: searchParams.date
-                }
-              })}
-              sx={{
-                py: 1.5,
-                px: 4,
-                borderRadius: '8px',
-                backgroundColor: '#37474f',
-                '&:hover': {
-                  backgroundColor: '#263238'
-                }
-              }}
-            >
-              طلب رحلة
-            </Button>
           </Box>
         ) : (
           <Grid container spacing={3}>

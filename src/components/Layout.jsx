@@ -14,7 +14,6 @@ import {
 import { ArrowForward, Person } from '@mui/icons-material';
 
 const pages = [
-  { title: 'البحث عن رحلة', path: '/search-rides' },
   { title: 'نشر رحلة', path: '/publish-ride' },
   { title: 'رحلاتي', path: '/my-rides' },
 ];

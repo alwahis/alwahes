@@ -21,6 +21,29 @@ import 'moment/locale/ar';
 
 moment.locale('ar');
 
+const cities = [
+  'بغداد',
+  'البصرة',
+  'الموصل',
+  'أربيل',
+  'كركوك',
+  'النجف',
+  'كربلاء',
+  'الحلة',
+  'الناصرية',
+  'الديوانية',
+  'السماوة',
+  'الكوت',
+  'العمارة',
+  'الرمادي',
+  'بعقوبة',
+  'السليمانية',
+  'دهوك',
+  'الفلوجة',
+  'تكريت',
+  'سامراء'
+];
+
 const RequestRide = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,11 +52,8 @@ const RequestRide = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    name: '',
     startingCity: startingCity || '',
-    startingArea: '',
     destinationCity: destinationCity || '',
-    destinationArea: '',
     date: date ? moment(date) : moment(),
     seats: '',
     whatsappNumber: '',
@@ -41,10 +61,6 @@ const RequestRide = () => {
   });
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('الرجاء إدخال الاسم');
-      return false;
-    }
     if (!formData.startingCity.trim()) {
       setError('الرجاء اختيار مدينة الانطلاق');
       return false;
@@ -90,9 +106,13 @@ const RequestRide = () => {
       // Show success message
       toast.success('تم إرسال طلب الرحلة بنجاح!');
 
-      // Navigate to search results to show available rides
+      // Navigate to search results to show matching published rides
       navigate('/search-results', {
-        search: `?from=${formData.startingCity}&to=${formData.destinationCity}&date=${formData.date.format('YYYY/MM/DD')}`
+        state: {
+          startingCity: formData.startingCity,
+          destinationCity: formData.destinationCity,
+          date: formData.date.format('YYYY/MM/DD')
+        }
       });
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -126,59 +146,44 @@ const RequestRide = () => {
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
                 <TextField
-                  label="الاسم"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  fullWidth
-                  error={Boolean(error && !formData.name.trim())}
-                  size="medium"
-                />
-
-                <TextField
+                  select
                   label="مدينة الانطلاق"
+                  name="startingCity"
                   value={formData.startingCity}
-                  disabled
-                  fullWidth
-                />
-
-                <TextField
-                  label="منطقة الانطلاق"
-                  name="startingArea"
-                  value={formData.startingArea}
                   onChange={handleChange}
                   required
                   fullWidth
-                  error={Boolean(error && !formData.startingArea.trim())}
-                  helperText="مثال: الكراج الموحد"
-                  placeholder="الكراج الموحد"
+                  error={Boolean(error && !formData.startingCity.trim())}
                   size="medium"
-                />
+                >
+                  {cities.map((city) => (
+                    <MenuItem key={city} value={city}>
+                      {city}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
                 <TextField
+                  select
                   label="مدينة الوصول"
+                  name="destinationCity"
                   value={formData.destinationCity}
-                  disabled
-                  fullWidth
-                />
-
-                <TextField
-                  label="منطقة الوصول"
-                  name="destinationArea"
-                  value={formData.destinationArea}
                   onChange={handleChange}
                   required
                   fullWidth
-                  error={Boolean(error && !formData.destinationArea.trim())}
-                  helperText="مثال: حي الجامعة"
-                  placeholder="حي الجامعة"
+                  error={Boolean(error && !formData.destinationCity.trim())}
                   size="medium"
-                />
+                >
+                  {cities.map((city) => (
+                    <MenuItem key={city} value={city}>
+                      {city}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
                 <DatePicker
-                  label="التاريخ"
-                  value={formData.date ? moment(formData.date) : null}
+                  label="التاريخ *"
+                  value={formData.date}
                   onChange={(newValue) => {
                     setFormData((prev) => ({ ...prev, date: newValue }));
                     setError('');
@@ -206,29 +211,30 @@ const RequestRide = () => {
                 />
 
                 <TextField
-                  label="عدد المقاعد"
+                  label="عدد المقاعد المطلوبة"
                   name="seats"
                   type="number"
                   value={formData.seats}
                   onChange={handleChange}
                   required
                   fullWidth
-                  error={Boolean(error && !formData.seats)}
-                  size="medium"
-                  inputProps={{ min: 1, max: 8 }}
+                  inputProps={{ min: 1 }}
+                  error={Boolean(error && (!formData.seats || formData.seats < 1))}
                 />
 
                 <TextField
-                  label="رقم الواتساب"
+                  label="رقم الواتساب *"
                   name="whatsappNumber"
                   value={formData.whatsappNumber}
                   onChange={handleChange}
                   required
                   fullWidth
-                  error={Boolean(error && !formData.whatsappNumber)}
-                  helperText="مثال: 07801234567"
-                  placeholder="07801234567"
                   size="medium"
+                  placeholder="مثال: 07801234567"
+                  helperText="مثال: 07801234567"
+                  InputProps={{
+                    sx: { bgcolor: 'background.paper' }
+                  }}
                 />
 
                 <TextField
@@ -239,6 +245,12 @@ const RequestRide = () => {
                   fullWidth
                   multiline
                   rows={3}
+                  size="medium"
+                  placeholder="مثال: اريد سيارة تاخذني من البيت بحي الجامعة"
+                  helperText="مثال: اريد سيارة تاخذني من البيت بحي الجامعة"
+                  InputProps={{
+                    sx: { bgcolor: 'background.paper' }
+                  }}
                 />
 
                 <Button
