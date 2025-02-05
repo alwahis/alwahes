@@ -65,9 +65,7 @@ const MatchingRequests = () => {
     return {
       id: request.id,
       startingCity: request.fields['Starting city'],
-      startingArea: request.fields['starting area'],
       destinationCity: request.fields['Destination city'],
-      destinationArea: request.fields['destination area'],
       date: request.fields['Date'],
       seats: request.fields['Seats'],
       whatsappNumber: request.fields['WhatsApp Number'],
@@ -138,9 +136,6 @@ const MatchingRequests = () => {
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         {formattedRequest.startingCity} إلى {formattedRequest.destinationCity}
-                      </Typography>
-                      <Typography>
-                        المنطقة: {formattedRequest.startingArea || 'غير محدد'} إلى {formattedRequest.destinationArea || 'غير محدد'}
                       </Typography>
                       <Typography>التاريخ: {moment(formattedRequest.date).format('LL')}</Typography>
                       <Typography>عدد المقاعد: {formattedRequest.seats}</Typography>

@@ -65,12 +65,9 @@ function PublishRide() {
   const [formData, setFormData] = useState({
     name: '',
     from: '',
-    fromArea: '',
     to: '',
-    toArea: '',
     date: moment(),
     time: moment(),
-    seats: '',
     price: '',
     whatsappNumber: '',
     note: '',
@@ -93,7 +90,6 @@ function PublishRide() {
       formData.to &&
       formData.date &&
       formData.time &&
-      formData.seats &&
       formData.price &&
       formData.whatsappNumber &&
       formData.carType
@@ -108,19 +104,17 @@ function PublishRide() {
     try {
       // Validate required fields
       if (!formData.name || !formData.from || !formData.to || !formData.date || 
-          !formData.time || !formData.seats || !formData.price || !formData.whatsappNumber) {
+          !formData.time || !formData.price || !formData.whatsappNumber) {
         throw new Error('جميع الحقول المطلوبة يجب ملؤها');
       }
 
       const rideData = {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
-        'starting area': formData.fromArea || '',
         'Destination city': formData.to,
-        'destination area': formData.toArea || '',
         'Date': formData.date.format('YYYY/MM/DD'),
-        'Time': formData.time.format('HH:mm'),
-        'Seats Available': String(formData.seats),
+        'Time': formData.time.format('HH:00'),
+        'Seats Available': "4",
         'Price per Seat': String(formData.price),
         'Car Type': formData.carType || '',
         'WhatsApp Number': formData.whatsappNumber,
@@ -235,22 +229,6 @@ function PublishRide() {
                   </TextField>
 
                   <TextField
-                    label="منطقة الانطلاق"
-                    name="fromArea"
-                    value={formData.fromArea}
-                    onChange={handleChange}
-                    fullWidth
-                    size="medium"
-                    placeholder="الكراج الموحد"
-                    helperText="مثال: الكراج الموحد"
-                    InputProps={{
-                      sx: { bgcolor: 'background.paper' }
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
                     select
                     label="مدينة الوصول *"
                     name="to"
@@ -269,20 +247,6 @@ function PublishRide() {
                       </MenuItem>
                     ))}
                   </TextField>
-
-                  <TextField
-                    label="منطقة الوصول"
-                    name="toArea"
-                    value={formData.toArea}
-                    onChange={handleChange}
-                    fullWidth
-                    size="medium"
-                    placeholder="حي الجامعة"
-                    helperText="مثال: حي الجامعة"
-                    InputProps={{
-                      sx: { bgcolor: 'background.paper' }
-                    }}
-                  />
                 </Box>
 
                 <Box sx={{ 
@@ -323,21 +287,24 @@ function PublishRide() {
                     label="الوقت *"
                     value={formData.time}
                     onChange={(newValue) => {
+                      // Set minutes to 0 for the selected hour
+                      const timeWithZeroMinutes = newValue.minute(0);
                       setFormData((prev) => ({
                         ...prev,
-                        time: newValue,
+                        time: timeWithZeroMinutes,
                       }));
                       setError('');
                     }}
-                    format="hh:mm A"
+                    format="hh A"
                     ampm={true}
                     ampmInClock={true}
+                    views={['hours']}
                     slotProps={{
                       textField: {
                         required: true,
                         fullWidth: true,
-                        placeholder: "مثال: 11:50 AM",
-                        helperText: "الساعة:الدقيقة",
+                        placeholder: "مثال: 11 AM",
+                        helperText: "الساعة",
                         error: Boolean(error && !formData.time),
                         dir: 'ltr',
                         size: "medium",
@@ -350,21 +317,6 @@ function PublishRide() {
                 </Box>
 
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
-                    label="عدد المقاعد *"
-                    name="seats"
-                    type="number"
-                    value={formData.seats}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                    size="medium"
-                    inputProps={{ min: 1, max: 8 }}
-                    InputProps={{
-                      sx: { bgcolor: 'background.paper' }
-                    }}
-                  />
-
                   <TextField
                     label="السعر لكل شخص"
                     variant="outlined"

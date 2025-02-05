@@ -67,7 +67,7 @@ const Home = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 3,
+                gap: 2,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 backgroundColor: theme.palette.background.paper,
@@ -88,16 +88,27 @@ const Home = () => {
                   transition: 'color 0.3s ease',
                 }}
               />
-              <Typography
-                variant="h5"
-                align="center"
-                sx={{
-                  fontWeight: 600,
-                  transition: 'color 0.3s ease',
-                }}
-              >
-                طلب رحلة
-              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 600,
+                    transition: 'color 0.3s ease',
+                    mb: 1
+                  }}
+                >
+                  طلب رحلة
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'text.secondary',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  للمسافرين - ابحث عن رحلة تناسبك
+                </Typography>
+              </Box>
             </Paper>
 
             <Paper
@@ -107,7 +118,7 @@ const Home = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 3,
+                gap: 2,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 backgroundColor: theme.palette.background.paper,
@@ -128,16 +139,27 @@ const Home = () => {
                   transition: 'color 0.3s ease',
                 }}
               />
-              <Typography
-                variant="h5"
-                align="center"
-                sx={{
-                  fontWeight: 600,
-                  transition: 'color 0.3s ease',
-                }}
-              >
-                نشر رحلة
-              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 600,
+                    transition: 'color 0.3s ease',
+                    mb: 1
+                  }}
+                >
+                  نشر رحلة
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'text.secondary',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  للسائقين - أعلن عن رحلتك القادمة
+                </Typography>
+              </Box>
             </Paper>
           </Box>
         </Box>
