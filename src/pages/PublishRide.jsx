@@ -12,7 +12,7 @@ import {
   Paper,
   InputAdornment,
 } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -50,11 +50,11 @@ const IRAQI_CITIES = [
 ];
 
 const formatTime = (time) => {
-  return `"${time.format('hh:mm A')}"`;
+  return time ? time.format('HH:mm') : '';
 };
 
 const formatDate = (date) => {
-  return `"${date.format('DD/MM/YYYY')}"`;
+  return date ? date.format('YYYY-MM-DD') : '';
 };
 
 function PublishRide() {
@@ -68,7 +68,7 @@ function PublishRide() {
     from: '',
     to: '',
     date: moment(),
-    time: moment(),
+    time: moment().startOf('hour'),
     price: '',
     whatsappNumber: '',
     note: '',
@@ -135,8 +135,8 @@ function PublishRide() {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
         'Destination city': formData.to,
-        'Date': formData.date.format('YYYY/MM/DD'),
-        'Time': formData.time.format('HH:00'),
+        'Date': formatDate(formData.date),
+        'Time': formatTime(formData.time),
         'Seats Available': "4",
         'Price per Seat': String(formData.price),
         'WhatsApp Number': formData.whatsappNumber,
@@ -199,7 +199,7 @@ function PublishRide() {
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
               </Alert>
             )}
@@ -207,7 +207,7 @@ function PublishRide() {
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
                 <TextField
-                  label="الاسم *"
+                  label="اسم السائق *"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
@@ -219,135 +219,88 @@ function PublishRide() {
                   }}
                 />
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
-                    select
-                    label="مدينة الانطلاق *"
-                    name="from"
-                    value={formData.from}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                    size="medium"
-                    InputProps={{
-                      sx: { bgcolor: 'background.paper' }
-                    }}
-                  >
-                    {IRAQI_CITIES.map((city) => (
-                      <MenuItem key={city} value={city}>
-                        {city}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                <TextField
+                  select
+                  label="نقطة الانطلاق *"
+                  name="from"
+                  value={formData.from}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  size="medium"
+                  InputProps={{
+                    sx: { bgcolor: 'background.paper' }
+                  }}
+                >
+                  {IRAQI_CITIES.map((city) => (
+                    <MenuItem key={city} value={city}>
+                      {city}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-                  <TextField
-                    select
-                    label="مدينة الوصول *"
-                    name="to"
-                    value={formData.to}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                    size="medium"
-                    InputProps={{
-                      sx: { bgcolor: 'background.paper' }
-                    }}
-                  >
-                    {IRAQI_CITIES.map((city) => (
-                      <MenuItem key={city} value={city}>
-                        {city}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Box>
+                <TextField
+                  select
+                  label="الوجهة *"
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  size="medium"
+                  InputProps={{
+                    sx: { bgcolor: 'background.paper' }
+                  }}
+                >
+                  {IRAQI_CITIES.map((city) => (
+                    <MenuItem key={city} value={city}>
+                      {city}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'row',
-                  gap: 2,
-                  mb: 4,
-                }}>
-                  <DatePicker
-                    label="التاريخ *"
-                    value={formData.date}
-                    onChange={(newValue) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        date: newValue,
-                      }));
-                      setError('');
-                    }}
-                    format="YYYY/MM/DD"
-                    slotProps={{
-                      textField: {
-                        required: true,
-                        fullWidth: true,
-                        placeholder: "مثال: 2025/01/23",
-                        helperText: "السنة/الشهر/اليوم",
-                        error: Boolean(error && !formData.date),
-                        dir: 'ltr',
-                        size: "medium",
-                        sx: {
-                          flex: 1,
-                        }
-                      }
-                    }}
-                    minDate={moment()}
-                  />
+                <DatePicker
+                  label="التاريخ *"
+                  value={formData.date}
+                  onChange={(newValue) => {
+                    setFormData(prev => ({ ...prev, date: newValue }));
+                    setError('');
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      required
+                      fullWidth
+                      size="medium"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { bgcolor: 'background.paper' }
+                      }}
+                    />
+                  )}
+                  minDate={moment()}
+                />
 
-                  <TimePicker
-                    label="الوقت *"
-                    value={formData.time}
-                    onChange={(newValue) => {
-                      // Set minutes to 0 for the selected hour
-                      const timeWithZeroMinutes = newValue.minute(0);
-                      setFormData((prev) => ({
-                        ...prev,
-                        time: timeWithZeroMinutes,
-                      }));
-                      setError('');
-                    }}
-                    format="hh A"
-                    ampm={true}
-                    ampmInClock={true}
-                    views={['hours']}
-                    slotProps={{
-                      textField: {
-                        required: true,
-                        fullWidth: true,
-                        placeholder: "مثال: 11 AM",
-                        helperText: "الساعة",
-                        error: Boolean(error && !formData.time),
-                        dir: 'ltr',
-                        size: "medium",
-                        sx: {
-                          flex: 1,
-                        }
-                      }
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
-                    label="السعر لكل شخص"
-                    variant="outlined"
-                    value={formData.price}
-                    onChange={handleChange}
-                    name="price"
-                    required
-                    fullWidth
-                    size="medium"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">دينار</InputAdornment>,
-                      sx: { bgcolor: 'background.paper' },
-                      inputProps: {
-                        style: { textAlign: 'left' }
-                      }
-                    }}
-                    type="text"
-                  />
-                </Box>
+                <TimePicker
+                  label="وقت المغادرة *"
+                  value={formData.time}
+                  onChange={(newValue) => {
+                    setFormData(prev => ({ ...prev, time: newValue }));
+                    setError('');
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      required
+                      fullWidth
+                      size="medium"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { bgcolor: 'background.paper' }
+                      }}
+                    />
+                  )}
+                />
 
                 <TextField
                   label="رقم الواتساب *"
@@ -373,22 +326,33 @@ function PublishRide() {
                   required
                   fullWidth
                   size="medium"
-                  placeholder="مثال: تويوتا كامري 2020"
                   InputProps={{
                     sx: { bgcolor: 'background.paper' }
                   }}
                 />
 
                 <TextField
-                  label="ملاحظات"
-                  variant="outlined"
+                  label="السعر للمقعد الواحد *"
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  size="medium"
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">IQD</InputAdornment>,
+                    sx: { bgcolor: 'background.paper' }
+                  }}
+                />
+
+                <TextField
+                  label="ملاحظات إضافية"
+                  name="note"
                   value={formData.note}
                   onChange={handleChange}
-                  name="note"
                   multiline
                   rows={4}
-                  placeholder="مثال: يمكنني أن آخذك من البيت"
-                  helperText="معلومات إضافية عن الرحلة (اختياري)"
                   fullWidth
                   size="medium"
                   InputProps={{
@@ -399,68 +363,14 @@ function PublishRide() {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="primary"
                   size="large"
-                  fullWidth
-                  disabled={loading || !validateForm()}
-                  sx={{
-                    mt: 2,
-                    py: 1.5,
-                    fontSize: '1.1rem'
-                  }}
+                  disabled={loading}
+                  sx={{ mt: 2 }}
                 >
                   {loading ? 'جاري النشر...' : 'نشر الرحلة'}
                 </Button>
               </Stack>
             </form>
-
-            {showRequests && (
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h5" gutterBottom align="center">
-                  طلبات الرحلات المتطابقة
-                </Typography>
-                
-                {requests.length === 0 ? (
-                  <Typography align="center" color="text.secondary">
-                    لا توجد طلبات رحلات متطابقة في الوقت الحالي
-                  </Typography>
-                ) : (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {requests.map((request) => (
-                      <Paper key={request.id} sx={{ p: 2 }}>
-                        <Typography variant="h6" gutterBottom>
-                          {request.fields['Starting city']} إلى {request.fields['Destination city']}
-                        </Typography>
-                        <Typography color="textSecondary" gutterBottom>
-                          التاريخ: {moment(request.fields['Date']).format('LL')}
-                        </Typography>
-                        <Typography>
-                          عدد المقاعد المطلوبة: {request.fields['Seats']}
-                        </Typography>
-                        {request.fields['Description'] && (
-                          <Typography>
-                            ملاحظات: {request.fields['Description']}
-                          </Typography>
-                        )}
-                        {request.fields['WhatsApp Number'] && (
-                          <Button
-                            variant="contained"
-                            color="success"
-                            startIcon={<i className="fa-brands fa-whatsapp" />}
-                            href={`https://wa.me/${formatWhatsAppNumber(request.fields['WhatsApp Number'])}?text=${createWhatsAppMessage(request)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ mt: 2 }}
-                          >
-                            تواصل مع الراكب
-                          </Button>
-                        )}
-                      </Paper>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            )}
           </Box>
         </Container>
       </LocalizationProvider>
