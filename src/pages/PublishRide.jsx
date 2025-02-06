@@ -11,15 +11,17 @@ import {
   MenuItem,
   Paper,
   InputAdornment,
+  IconButton,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import moment from 'moment';
 import 'moment/locale/ar';
 import Layout from '../components/Layout';
-import { createRide, getRideRequests } from '../services/airtable';
+import { createRide, getMatchingRideRequests } from '../services/airtable';
 import { createRideToken } from '../utils/deviceHistory';
 import { toast } from 'react-hot-toast';
 import { isValidPhoneNumber } from '../utils/phoneNumber';
@@ -61,8 +63,8 @@ function PublishRide() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [requests, setRequests] = useState([]);
   const [showRequests, setShowRequests] = useState(false);
+  const [matchingRequests, setMatchingRequests] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     from: '',
@@ -150,7 +152,11 @@ function PublishRide() {
       if (newRide) {
         await createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
         toast.success('تم نشر الرحلة بنجاح');
-        navigate('/my-rides');
+        
+        // Get matching requests
+        const requests = await getMatchingRideRequests(formData.from, formData.to, formatDate(formData.date));
+        setMatchingRequests(requests);
+        setShowRequests(true);
       }
     } catch (err) {
       console.error('Error publishing ride:', err);
@@ -171,9 +177,11 @@ function PublishRide() {
   const createWhatsAppMessage = (request) => {
     const message = `السلام عليكم 🌟
 لدي رحلة متوفرة تناسب طلبك:
-- من ${request.fields['Starting city']} 
-- إلى ${request.fields['Destination city']}
-- بتاريخ ${moment(request.fields['Date']).format('LL')}
+- من ${formData.from} 
+- إلى ${formData.to}
+- بتاريخ ${moment(formData.date).format('LL')}
+- السعر: ${formData.price} دينار
+${formData.note ? `- ملاحظات: ${formData.note}` : ''}
 
 هل ما زلت تبحث عن رحلة؟`;
     return encodeURIComponent(message);
@@ -371,6 +379,64 @@ function PublishRide() {
                 </Button>
               </Stack>
             </form>
+
+            {showRequests && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom align="center" sx={{ mb: 3 }}>
+                  طلبات الرحلات المتطابقة
+                </Typography>
+                
+                {matchingRequests.length === 0 ? (
+                  <Alert severity="info">
+                    لا توجد طلبات رحلات متطابقة في الوقت الحالي
+                  </Alert>
+                ) : (
+                  <Stack spacing={2}>
+                    {matchingRequests.map((request) => (
+                      <Paper key={request.id} elevation={2} sx={{ p: 3 }}>
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                            {request.fields['Name']}
+                          </Typography>
+                          
+                          <Typography variant="body2" color="text.secondary">
+                            من {request.fields['Starting city']} إلى {request.fields['Destination city']}
+                          </Typography>
+                          
+                          <Typography variant="body2" color="text.secondary">
+                            التاريخ: {moment(request.fields['Date']).format('LL')}
+                          </Typography>
+                          
+                          <Typography variant="body2">
+                            عدد المقاعد: {request.fields['Seats']}
+                          </Typography>
+
+                          {request.fields['Note'] && (
+                            <Typography variant="body2">
+                              ملاحظات: {request.fields['Note']}
+                            </Typography>
+                          )}
+
+                          {request.fields['WhatsApp Number'] && (
+                            <Button
+                              variant="contained"
+                              color="success"
+                              startIcon={<WhatsAppIcon />}
+                              href={`https://wa.me/${request.fields['WhatsApp Number']}?text=${createWhatsAppMessage(request)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{ mt: 1 }}
+                            >
+                              تواصل مع الراكب
+                            </Button>
+                          )}
+                        </Stack>
+                      </Paper>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+            )}
           </Box>
         </Container>
       </LocalizationProvider>
