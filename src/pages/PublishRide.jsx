@@ -85,6 +85,10 @@ function PublishRide() {
   };
 
   const validateForm = () => {
+    if (!formData.name) {
+      setError('الرجاء إدخال اسم السائق');
+      return false;
+    }
     if (!formData.from || !formData.to) {
       setError('الرجاء تحديد نقطة الانطلاق والوصول');
       return false;
@@ -97,30 +101,36 @@ function PublishRide() {
       setError('رقم الواتساب يجب أن يكون 11 رقماً');
       return false;
     }
-    return (
-      formData.name &&
-      formData.from &&
-      formData.to &&
-      formData.date &&
-      formData.time &&
-      formData.price &&
-      formData.whatsappNumber &&
-      formData.carType
-    );
+    if (!formData.date) {
+      setError('الرجاء تحديد التاريخ');
+      return false;
+    }
+    if (!formData.time) {
+      setError('الرجاء تحديد الوقت');
+      return false;
+    }
+    if (!formData.price) {
+      setError('الرجاء تحديد السعر');
+      return false;
+    }
+    if (!formData.carType) {
+      setError('الرجاء تحديد نوع السيارة');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Validate required fields
-      if (!formData.name || !formData.from || !formData.to || !formData.date || 
-          !formData.time || !formData.price || !formData.whatsappNumber) {
-        throw new Error('جميع الحقول المطلوبة يجب ملؤها');
-      }
-
       const rideData = {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
@@ -129,34 +139,23 @@ function PublishRide() {
         'Time': formData.time.format('HH:00'),
         'Seats Available': "4",
         'Price per Seat': String(formData.price),
-        'Car Type': formData.carType || '',
         'WhatsApp Number': formData.whatsappNumber,
-        'Description': formData.note || '',
+        'Car Type': formData.carType,
+        'Note': formData.note || '',
+        'Status': 'Active'
       };
 
-      console.log('Submitting ride data:', rideData);
       const newRide = await createRide(rideData);
       
-      if (newRide && newRide.id) {
-        createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
+      if (newRide) {
+        await createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
         toast.success('تم نشر الرحلة بنجاح');
-
-        // Navigate to matching requests page
-        navigate('/matching-requests', {
-          state: {
-            rideId: newRide.id,
-            from: formData.from,
-            to: formData.to,
-            date: formData.date.format('YYYY/MM/DD')
-          }
-        });
-      } else {
-        throw new Error('فشل في إنشاء الرحلة');
+        navigate('/my-rides');
       }
-
-    } catch (error) {
-      setError(error.message || 'حدث خطأ أثناء نشر الرحلة. يرجى المحاولة مرة أخرى.');
-      console.error('Publish error:', error);
+    } catch (err) {
+      console.error('Error publishing ride:', err);
+      setError(err.message || 'حدث خطأ أثناء نشر الرحلة');
+    } finally {
       setLoading(false);
     }
   };
