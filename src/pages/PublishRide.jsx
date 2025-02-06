@@ -56,15 +56,15 @@ const formatTime = (time) => {
 };
 
 const formatDate = (date) => {
-  return date ? date.format('YYYY-MM-DD') : '';
+  if (!date) return '';
+  const momentDate = moment(date);
+  return momentDate.isValid() ? momentDate.format('YYYY/MM/DD') : '';
 };
 
 function PublishRide() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showRequests, setShowRequests] = useState(false);
-  const [matchingRequests, setMatchingRequests] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     from: '',
@@ -133,11 +133,14 @@ function PublishRide() {
     setLoading(true);
 
     try {
+      const formattedDate = formatDate(formData.date);
+      console.log('Publishing ride with date:', formattedDate);
+
       const rideData = {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
         'Destination city': formData.to,
-        'Date': formatDate(formData.date),
+        'Date': formattedDate,
         'Time': formatTime(formData.time),
         'Seats Available': "4",
         'Price per Seat': String(formData.price),
@@ -153,10 +156,16 @@ function PublishRide() {
         await createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
         toast.success('تم نشر الرحلة بنجاح');
         
-        // Get matching requests
-        const requests = await getMatchingRideRequests(formData.from, formData.to, formatDate(formData.date));
-        setMatchingRequests(requests);
-        setShowRequests(true);
+        // Navigate to matching requests page
+        navigate('/matching-requests', {
+          state: {
+            from: formData.from,
+            to: formData.to,
+            date: formattedDate,
+            price: formData.price,
+            note: formData.note
+          }
+        });
       }
     } catch (err) {
       console.error('Error publishing ride:', err);
@@ -271,21 +280,33 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   label="التاريخ *"
                   value={formData.date}
                   onChange={(newValue) => {
-                    setFormData(prev => ({ ...prev, date: newValue }));
+                    setFormData((prev) => ({ ...prev, date: newValue }));
                     setError('');
                   }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      fullWidth
-                      size="medium"
-                      InputProps={{
-                        ...params.InputProps,
-                        sx: { bgcolor: 'background.paper' }
-                      }}
-                    />
-                  )}
+                  format="YYYY/MM/DD"
+                  slotProps={{
+                    textField: {
+                      required: true,
+                      fullWidth: true,
+                      placeholder: "مثال: 2025/01/23",
+                      helperText: "السنة/الشهر/اليوم",
+                      error: Boolean(error && !formData.date),
+                      dir: 'ltr',
+                      size: "medium",
+                      sx: {
+                        '& .MuiInputBase-root': {
+                          bgcolor: 'background.paper'
+                        }
+                      }
+                    },
+                    mobilePaper: {
+                      sx: {
+                        '& .MuiPickersCalendarHeader-label': {
+                          fontSize: '1rem'
+                        }
+                      }
+                    }
+                  }}
                   minDate={moment()}
                 />
 
@@ -293,7 +314,7 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   label="وقت المغادرة *"
                   value={formData.time}
                   onChange={(newValue) => {
-                    setFormData(prev => ({ ...prev, time: newValue }));
+                    setFormData((prev) => ({ ...prev, time: newValue }));
                     setError('');
                   }}
                   renderInput={(params) => (
@@ -373,70 +394,19 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   variant="contained"
                   size="large"
                   disabled={loading}
-                  sx={{ mt: 2 }}
+                  sx={{
+                    mt: 2,
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                  }}
                 >
                   {loading ? 'جاري النشر...' : 'نشر الرحلة'}
                 </Button>
               </Stack>
             </form>
-
-            {showRequests && (
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" gutterBottom align="center" sx={{ mb: 3 }}>
-                  طلبات الرحلات المتطابقة
-                </Typography>
-                
-                {matchingRequests.length === 0 ? (
-                  <Alert severity="info">
-                    لا توجد طلبات رحلات متطابقة في الوقت الحالي
-                  </Alert>
-                ) : (
-                  <Stack spacing={2}>
-                    {matchingRequests.map((request) => (
-                      <Paper key={request.id} elevation={2} sx={{ p: 3 }}>
-                        <Stack spacing={1}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
-                            {request.fields['Name']}
-                          </Typography>
-                          
-                          <Typography variant="body2" color="text.secondary">
-                            من {request.fields['Starting city']} إلى {request.fields['Destination city']}
-                          </Typography>
-                          
-                          <Typography variant="body2" color="text.secondary">
-                            التاريخ: {moment(request.fields['Date']).format('LL')}
-                          </Typography>
-                          
-                          <Typography variant="body2">
-                            عدد المقاعد: {request.fields['Seats']}
-                          </Typography>
-
-                          {request.fields['Note'] && (
-                            <Typography variant="body2">
-                              ملاحظات: {request.fields['Note']}
-                            </Typography>
-                          )}
-
-                          {request.fields['WhatsApp Number'] && (
-                            <Button
-                              variant="contained"
-                              color="success"
-                              startIcon={<WhatsAppIcon />}
-                              href={`https://wa.me/${request.fields['WhatsApp Number']}?text=${createWhatsAppMessage(request)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={{ mt: 1 }}
-                            >
-                              تواصل مع الراكب
-                            </Button>
-                          )}
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-              </Box>
-            )}
           </Box>
         </Container>
       </LocalizationProvider>

@@ -292,69 +292,49 @@ export async function createRideRequest({
 
 export async function getMatchingRideRequests(from, to, date) {
   try {
+    if (!from || !to || !date) {
+      console.error('Missing required parameters:', { from, to, date });
+      throw new Error('بيانات البحث غير مكتملة');
+    }
+
+    console.log('Searching for matching requests with:', { from, to, date });
+    
+    // Get all active ride requests for the same date, from, and to
     const formula = `AND(
       {Starting city} = '${from}',
       {Destination city} = '${to}',
-      {Date} = '${date}',
-      NOT({Cancelled})
+      {Date} = '${date}'
     )`;
-
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests?filterByFormula=${encodeURIComponent(formula)}`;
     
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch matching ride requests');
-    }
-
-    const data = await response.json();
-    return data.records || [];
-  } catch (error) {
-    console.error('Error fetching matching requests:', error);
-    throw new Error('حدث خطأ في جلب الطلبات المطابقة');
-  }
-}
-
-export async function getDriverRidesAndRequests(whatsappNumber) {
-  try {
-    const formattedNumber = formatWhatsAppNumber(whatsappNumber);
-    console.log('Searching for rides with number:', formattedNumber);
-    
-    // First get all rides for this driver - using OR to match with or without country code
-    const formula = `OR(
-      {WhatsApp Number} = '${formattedNumber}',
-      {WhatsApp Number} = '0${formattedNumber}',
-      {WhatsApp Number} = '964${formattedNumber}'
-    )`;
     console.log('Filter formula:', formula);
-    
-    const rides = await publishedRidesTable
-      .select({
-        filterByFormula: formula
-      })
-      .all();
-    
-    console.log('Found rides:', rides);
 
-    // Then get all ride requests for this driver
-    const requests = await rideRequestsTable
-      .select({
-        filterByFormula: formula
-      })
-      .all();
+    const records = await rideRequestsTable.select({
+      filterByFormula: formula,
+      maxRecords: 100,
+      view: "Grid view"
+    }).all();
     
-    console.log('Found requests:', requests);
+    console.log('Raw records:', records);
+    console.log('Found matching requests:', records.length);
+    
+    const mappedRecords = records.map(record => ({
+      id: record.id,
+      fields: {
+        ...record.fields,
+        'Starting city': record.fields['Starting city'] || '',
+        'Destination city': record.fields['Destination city'] || '',
+        'Date': record.fields['Date'] || '',
+        'Name': record.fields['Name'] || '',
+        'WhatsApp Number': record.fields['WhatsApp Number'] || '',
+        'Seats': record.fields['Seats'] || '',
+        'Note': record.fields['Note'] || ''
+      }
+    }));
 
-    return {
-      rides,
-      requests
-    };
+    console.log('Mapped records:', mappedRecords);
+    return mappedRecords;
   } catch (error) {
-    console.error('Error fetching driver rides and requests:', error);
+    console.error('Error in getMatchingRideRequests:', error);
     throw error;
   }
 }
@@ -513,5 +493,45 @@ export async function cancelRideRequest(requestId) {
   } catch (error) {
     console.error('Error cancelling ride request:', error);
     throw new Error('حدث خطأ في إلغاء طلب الرحلة');
+  }
+}
+
+export async function getDriverRidesAndRequests(whatsappNumber) {
+  try {
+    const formattedNumber = formatWhatsAppNumber(whatsappNumber);
+    console.log('Searching for rides with number:', formattedNumber);
+    
+    // First get all rides for this driver - using OR to match with or without country code
+    const formula = `OR(
+      {WhatsApp Number} = '${formattedNumber}',
+      {WhatsApp Number} = '0${formattedNumber}',
+      {WhatsApp Number} = '964${formattedNumber}'
+    )`;
+    console.log('Filter formula:', formula);
+    
+    const rides = await publishedRidesTable
+      .select({
+        filterByFormula: formula
+      })
+      .all();
+    
+    console.log('Found rides:', rides);
+
+    // Then get all ride requests for this driver
+    const requests = await rideRequestsTable
+      .select({
+        filterByFormula: formula
+      })
+      .all();
+    
+    console.log('Found requests:', requests);
+
+    return {
+      rides,
+      requests
+    };
+  } catch (error) {
+    console.error('Error fetching driver rides and requests:', error);
+    throw error;
   }
 }
