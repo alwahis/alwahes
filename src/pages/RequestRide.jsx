@@ -9,14 +9,19 @@ import {
   Box,
   Container,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
 import { toast } from 'react-hot-toast';
 import Layout from '../components/Layout';
 import { createRideRequest } from '../services/airtable';
+import { isValidPhoneNumber } from '../utils/phoneNumber';
 import 'moment/locale/ar';
 
 moment.locale('ar');
@@ -71,6 +76,10 @@ const RequestRide = () => {
     }
     if (!formData.whatsappNumber.trim()) {
       setError('الرجاء إدخال رقم الواتساب');
+      return false;
+    }
+    if (!isValidPhoneNumber(formData.whatsappNumber)) {
+      setError('رقم الواتساب يجب أن يكون 11 رقماً');
       return false;
     }
     if (!formData.seats || formData.seats < 1) {
@@ -129,12 +138,12 @@ const RequestRide = () => {
   };
 
   return (
-    <Layout title="طلب رحلة">
+    <Layout title="بحث عن رحلة">
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="ar">
         <Container maxWidth="sm">
           <Box sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center">
-              طلب رحلة جديدة
+              بحث عن رحلة جديدة
             </Typography>
 
             {error && (
@@ -232,6 +241,7 @@ const RequestRide = () => {
                   size="medium"
                   placeholder="مثال: 07801234567"
                   helperText="مثال: 07801234567"
+                  error={formData.whatsappNumber && !isValidPhoneNumber(formData.whatsappNumber)}
                   InputProps={{
                     sx: { bgcolor: 'background.paper' }
                   }}

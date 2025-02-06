@@ -23,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'react-hot-toast';
 import Layout from '../components/Layout';
 import { getDriverRidesAndRequests, cancelRide, cancelRideRequest } from '../services/airtable';
+import { isValidPhoneNumber } from '../utils/phoneNumber';
 
 const MyRides = () => {
   const [rides, setRides] = useState([]);
@@ -32,15 +33,23 @@ const MyRides = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
 
-  const handleSearch = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+
     if (!whatsappNumber.trim()) {
       setError('الرجاء إدخال رقم الواتساب');
+      setLoading(false);
       return;
     }
 
-    setError('');
-    setLoading(true);
+    if (!isValidPhoneNumber(whatsappNumber)) {
+      setError('رقم الواتساب يجب أن يكون 11 رقماً');
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await getDriverRidesAndRequests(whatsappNumber);
       setRides(data.rides);
@@ -95,7 +104,7 @@ const MyRides = () => {
         <Box sx={{ py: 4 }}>
           <Paper 
             component="form" 
-            onSubmit={handleSearch}
+            onSubmit={handleSubmit}
             elevation={2} 
             sx={{ 
               p: { xs: 2, md: 4 },
@@ -108,18 +117,21 @@ const MyRides = () => {
             </Typography>
             
             <TextField
-              label="رقم الواتساب"
-              variant="outlined"
+              label="رقم الواتساب *"
               value={whatsappNumber}
               onChange={(e) => {
                 setWhatsappNumber(e.target.value);
                 setError('');
               }}
-              error={!!error}
-              helperText={error || 'مثال: 07801234567'}
-              placeholder="07801234567"
+              required
               fullWidth
-              sx={{ mb: 2 }}
+              size="medium"
+              placeholder="مثال: 07801234567"
+              helperText="مثال: 07801234567"
+              error={whatsappNumber && !isValidPhoneNumber(whatsappNumber)}
+              InputProps={{
+                sx: { bgcolor: 'background.paper' }
+              }}
             />
             
             <Button

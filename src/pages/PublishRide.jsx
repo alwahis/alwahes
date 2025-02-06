@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   TextField,
@@ -19,9 +19,10 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
 import 'moment/locale/ar';
 import Layout from '../components/Layout';
-import { createRide } from '../services/airtable';
+import { createRide, getRideRequests } from '../services/airtable';
 import { createRideToken } from '../utils/deviceHistory';
 import { toast } from 'react-hot-toast';
+import { isValidPhoneNumber } from '../utils/phoneNumber';
 
 moment.locale('ar');
 
@@ -84,6 +85,18 @@ function PublishRide() {
   };
 
   const validateForm = () => {
+    if (!formData.from || !formData.to) {
+      setError('الرجاء تحديد نقطة الانطلاق والوصول');
+      return false;
+    }
+    if (!formData.whatsappNumber.trim()) {
+      setError('رقم الواتساب مطلوب');
+      return false;
+    }
+    if (!isValidPhoneNumber(formData.whatsappNumber)) {
+      setError('رقم الواتساب يجب أن يكون 11 رقماً');
+      return false;
+    }
     return (
       formData.name &&
       formData.from &&
@@ -347,6 +360,7 @@ function PublishRide() {
                   size="medium"
                   placeholder="مثال: 07801234567"
                   helperText="مثال: 07801234567"
+                  error={formData.whatsappNumber && !isValidPhoneNumber(formData.whatsappNumber)}
                   InputProps={{
                     sx: { bgcolor: 'background.paper' }
                   }}

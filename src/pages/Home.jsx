@@ -1,7 +1,7 @@
 import { Box, Container, Typography, Paper, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import SearchIcon from '@mui/icons-material/Search';
 import Layout from '../components/Layout';
 
 const Home = () => {
@@ -81,7 +81,7 @@ const Home = () => {
               }}
               onClick={() => navigate('/request-ride')}
             >
-              <AddCircleOutlineIcon
+              <SearchIcon
                 sx={{
                   fontSize: 48,
                   color: theme.palette.primary.main,
@@ -97,7 +97,7 @@ const Home = () => {
                     mb: 1
                   }}
                 >
-                  طلب رحلة
+                  بحث عن رحلة
                 </Typography>
                 <Typography
                   variant="body1"
