@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار رفع الصور - Cloudinary Test</title>
+  <style>
+    body {
+      font-family: 'Cairo', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      direction: rtl;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #FF620C;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-section h2 {
+      margin-top: 0;
+      color: #0078FF;
+    }
+    button {
+      background-color: #FF620C;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #e55a0c;
+    }
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      min-height: 50px;
+    }
+    .log {
+      margin-top: 30px;
+      padding: 10px;
+      background-color: #333;
+      color: #fff;
+      border-radius: 5px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+    .success {
+      color: #4CAF50;
+    }
+    .error {
+      color: #F44336;
+    }
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .image-preview img {
+      max-width: 100%;
+      max-height: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>اختبار رفع الصور - Cloudinary Test</h1>
+    
+    <div class="test-section">
+      <h2>اختبار التكوين - Configuration Test</h2>
+      <button id="test-config">اختبار التكوين</button>
+      <div id="config-result" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>اختبار الرفع المباشر - Direct Upload Test</h2>
+      <button id="test-direct-upload">اختبار الرفع المباشر</button>
+      <div id="direct-result" class="result"></div>
+      <div id="direct-image-preview" class="image-preview"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>اختبار واجهة الرفع - Widget Upload Test</h2>
+      <button id="test-widget-upload">اختبار واجهة الرفع</button>
+      <div id="widget-result" class="result"></div>
+      <div id="widget-image-preview" class="image-preview"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>اختبار الرفع اليدوي - Manual Upload Test</h2>
+      <input type="file" id="manual-file-input" accept="image/*">
+      <button id="manual-upload">رفع الصورة</button>
+      <div id="manual-result" class="result"></div>
+      <div id="manual-image-preview" class="image-preview"></div>
+    </div>
+    
+    <div class="log" id="log"></div>
+  </div>
+
+  <script type="module">
+    // Import your Cloudinary utility
+    import { testCloudinaryConfig, testDirectUpload, testUploadWidget, uploadImage } from './src/utils/cloudinary.js';
+    
+    // Override console.log to display in our log div
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = function() {
+      const args = Array.from(arguments);
+      const logDiv = document.getElementById('log');
+      const logEntry = document.createElement('div');
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      logDiv.appendChild(logEntry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      originalLog.apply(console, arguments);
+    };
+    
+    console.error = function() {
+      const args = Array.from(arguments);
+      const logDiv = document.getElementById('log');
+      const logEntry = document.createElement('div');
+      logEntry.textContent = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' ');
+      logEntry.classList.add('error');
+      logDiv.appendChild(logEntry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      originalError.apply(console, arguments);
+    };
+    
+    // Configuration test
+    document.getElementById('test-config').addEventListener('click', async () => {
+      const resultDiv = document.getElementById('config-result');
+      resultDiv.innerHTML = 'Testing configuration...';
+      
+      try {
+        const result = await testCloudinaryConfig();
+        resultDiv.innerHTML = `
+          <div class="${result.status === 'success' ? 'success' : 'error'}">
+            <strong>Status:</strong> ${result.status}<br>
+            <strong>Message:</strong> ${result.message}
+          </div>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${error.message}
+          </div>
+        `;
+      }
+    });
+    
+    // Direct upload test
+    document.getElementById('test-direct-upload').addEventListener('click', async () => {
+      const resultDiv = document.getElementById('direct-result');
+      const previewDiv = document.getElementById('direct-image-preview');
+      resultDiv.innerHTML = 'Testing direct upload...';
+      previewDiv.innerHTML = '';
+      
+      try {
+        const result = await testDirectUpload();
+        resultDiv.innerHTML = `
+          <div class="${result.status === 'success' ? 'success' : 'error'}">
+            <strong>Status:</strong> ${result.status}<br>
+            <strong>Message:</strong> ${result.message}
+          </div>
+        `;
+        
+        if (result.imageUrl) {
+          previewDiv.innerHTML = `<img src="${result.imageUrl}" alt="Uploaded image">`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${error.message}
+          </div>
+        `;
+      }
+    });
+    
+    // Widget upload test
+    document.getElementById('test-widget-upload').addEventListener('click', () => {
+      const resultDiv = document.getElementById('widget-result');
+      resultDiv.innerHTML = 'Opening upload widget...';
+      
+      testUploadWidget();
+    });
+    
+    // Manual upload test
+    document.getElementById('manual-upload').addEventListener('click', async () => {
+      const fileInput = document.getElementById('manual-file-input');
+      const resultDiv = document.getElementById('manual-result');
+      const previewDiv = document.getElementById('manual-image-preview');
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> Please select a file first
+          </div>
+        `;
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      resultDiv.innerHTML = `Uploading ${file.name}...`;
+      previewDiv.innerHTML = '';
+      
+      try {
+        const result = await uploadImage(file);
+        resultDiv.innerHTML = `
+          <div class="success">
+            <strong>Upload successful!</strong><br>
+            <strong>URL:</strong> ${result.url}
+          </div>
+        `;
+        
+        previewDiv.innerHTML = `<img src="${result.url}" alt="Uploaded image">`;
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${error.message}
+          </div>
+        `;
+      }
+    });
+    
+    console.log('Cloudinary test page loaded');
+  </script>
+</body>
+</html>

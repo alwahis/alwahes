@@ -11,19 +11,22 @@ import {
   BottomNavigation,
   BottomNavigationAction,
 } from '@mui/material';
-import { ArrowForward, Person } from '@mui/icons-material';
+import { ArrowForward, Person, Search, DirectionsCar } from '@mui/icons-material';
 
 const pages = [
   { title: 'نشر رحلة', path: '/publish-ride' },
+  { title: 'بحث عن رحلة', path: '/request-ride' },
   { title: 'رحلاتي', path: '/my-rides' },
 ];
 
-// Mobile navigation shows only My Rides
+// Mobile navigation
 const mobilePages = [
+  { title: 'نشر رحلة', path: '/publish-ride' },
+  { title: 'بحث عن رحلة', path: '/request-ride' },
   { title: 'رحلاتي', path: '/my-rides' },
 ];
 
-const Layout = ({ children }) => {
+const Layout = ({ children, title }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,17 +46,32 @@ const Layout = ({ children }) => {
               component="div"
               onClick={() => navigate('/')}
               sx={{ 
-                flexGrow: 1, 
+                flexGrow: 0, 
                 display: 'flex',
                 cursor: 'pointer',
                 justifyContent: { xs: 'center', md: 'flex-start' },
                 '&:hover': {
                   opacity: 0.8,
                 },
+                mr: 2
               }}
             >
               عالواهس
             </Typography>
+            
+            {title && (
+              <Typography
+                variant="h6"
+                noWrap
+                component="div"
+                sx={{ 
+                  flexGrow: 1,
+                  textAlign: 'center'
+                }}
+              >
+                {title}
+              </Typography>
+            )}
 
             <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto' }}>
               {pages.map((page) => (
@@ -142,10 +160,17 @@ const Layout = ({ children }) => {
             },
           }}
         >
-          <BottomNavigationAction
-            label={mobilePages[0].title}
-            icon={<Person />}
-          />
+          {mobilePages.map((page, index) => (
+            <BottomNavigationAction
+              key={index}
+              label={page.title}
+              icon={
+                page.path === '/publish-ride' ? <DirectionsCar /> :
+                page.path === '/request-ride' ? <Search /> :
+                <Person />
+              }
+            />
+          ))}
         </BottomNavigation>
       </Box>
 

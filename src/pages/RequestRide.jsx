@@ -116,11 +116,12 @@ const RequestRide = () => {
       toast.success('تم إرسال طلب الرحلة بنجاح!');
 
       // Navigate to search results to show matching published rides
+      // Don't pass date parameter to show all rides regardless of date
       navigate('/search-results', {
         state: {
           startingCity: formData.startingCity,
-          destinationCity: formData.destinationCity,
-          date: formData.date.format('YYYY/MM/DD')
+          destinationCity: formData.destinationCity
+          // Date is intentionally omitted to show all rides regardless of date
         }
       });
     } catch (error) {
@@ -130,6 +131,8 @@ const RequestRide = () => {
       setLoading(false);
     }
   };
+  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -138,12 +141,12 @@ const RequestRide = () => {
   };
 
   return (
-    <Layout title="بحث عن رحلة">
+    <Layout>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="ar">
         <Container maxWidth="sm">
           <Box sx={{ mt: 4, mb: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center">
-              بحث عن رحلة جديدة
+              طلب رحلة جديدة
             </Typography>
 
             {error && (

@@ -19,7 +19,7 @@ const RideCard = ({ ride }) => {
     const message = encodeURIComponent(
       `مرحبا، أنا مهتم برحلتك من ${ride.fields['Starting Point']} إلى ${
         ride.fields['Destination']
-      } بتاريخ ${ride.fields['Date']}`
+      }`
     );
     window.open(
       `https://wa.me/${ride.fields['WhatsApp Number']}?text=${message}`,
@@ -53,12 +53,6 @@ const RideCard = ({ ride }) => {
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <EventIcon color="primary" />
-              <Typography>
-                التاريخ: {ride.fields['Date']}
-              </Typography>
-            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <AccessTimeIcon color="primary" />
               <Typography>

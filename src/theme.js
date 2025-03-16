@@ -23,25 +23,73 @@ const darkOrange = {
 
 const theme = createTheme({
   direction: 'rtl',
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
   typography: {
     fontFamily: 'Cairo, sans-serif',
     h1: {
       fontWeight: 700,
+      fontSize: '2.5rem',
+      '@media (max-width:600px)': {
+        fontSize: '2rem',
+      },
     },
     h2: {
       fontWeight: 700,
+      fontSize: '2rem',
+      '@media (max-width:600px)': {
+        fontSize: '1.75rem',
+      },
     },
     h3: {
       fontWeight: 600,
+      fontSize: '1.75rem',
+      '@media (max-width:600px)': {
+        fontSize: '1.5rem',
+      },
     },
     h4: {
       fontWeight: 600,
+      fontSize: '1.5rem',
+      '@media (max-width:600px)': {
+        fontSize: '1.25rem',
+      },
     },
     h5: {
       fontWeight: 500,
+      fontSize: '1.25rem',
+      '@media (max-width:600px)': {
+        fontSize: '1.1rem',
+      },
     },
     h6: {
       fontWeight: 500,
+      fontSize: '1.1rem',
+      '@media (max-width:600px)': {
+        fontSize: '1rem',
+      },
+    },
+    body1: {
+      fontSize: '1rem',
+      '@media (max-width:600px)': {
+        fontSize: '0.95rem',
+      },
+    },
+    body2: {
+      fontSize: '0.875rem',
+      '@media (max-width:600px)': {
+        fontSize: '0.85rem',
+      },
+    },
+    button: {
+      fontWeight: 600,
     },
   },
   palette: {
@@ -71,13 +119,31 @@ const theme = createTheme({
           fontSize: '1rem',
           padding: '10px 24px',
           boxShadow: 'none',
+          minHeight: '44px',
           '&:hover': {
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          },
+          '@media (max-width:600px)': {
+            fontSize: '0.95rem',
+            padding: '8px 16px',
           },
         },
         contained: {
           '&:hover': {
             backgroundColor: darkOrange[800],
+          },
+        },
+        // Add touch-friendly styles for mobile
+        sizeLarge: {
+          minHeight: '54px',
+          '@media (max-width:600px)': {
+            minHeight: '48px',
+          },
+        },
+        sizeSmall: {
+          minHeight: '36px',
+          '@media (max-width:600px)': {
+            minHeight: '40px',
           },
         },
       },
@@ -101,6 +167,19 @@ const theme = createTheme({
             '&:hover fieldset': {
               borderColor: darkOrange[500],
             },
+            '@media (max-width:600px)': {
+              fontSize: '0.95rem',
+            },
+            '& input': {
+              '@media (max-width:600px)': {
+                padding: '14px 12px',
+              },
+            },
+          },
+          '& .MuiInputLabel-root': {
+            '@media (max-width:600px)': {
+              fontSize: '0.95rem',
+            },
           },
         },
       },
@@ -113,6 +192,44 @@ const theme = createTheme({
           '&:hover': {
             transform: 'translateY(-4px)',
           },
+          '@media (max-width:600px)': {
+            borderRadius: 12,
+            '&:hover': {
+              transform: 'none',
+            },
+          },
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: {
+          height: 56,
+          backgroundColor: '#ffffff',
+        },
+      },
+    },
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        root: {
+          color: 'rgba(0, 0, 0, 0.6)',
+          '&.Mui-selected': {
+            color: darkOrange[700],
+          },
+        },
+      },
+    },
+    MuiTouchRipple: {
+      styleOverrides: {
+        root: {
+          color: darkOrange[700],
         },
       },
     },

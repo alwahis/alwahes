@@ -12,10 +12,12 @@ import {
   Paper,
   InputAdornment,
   IconButton,
+  Input,
+  FormControl,
+  FormLabel,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import moment from 'moment';
@@ -57,8 +59,9 @@ const formatTime = (time) => {
 
 const formatDate = (date) => {
   if (!date) return '';
+  // Use ISO format (YYYY-MM-DD) which is recognized by moment.js without warnings
   const momentDate = moment(date);
-  return momentDate.isValid() ? momentDate.format('YYYY/MM/DD') : '';
+  return momentDate.isValid() ? momentDate.format('YYYY-MM-DD') : '';
 };
 
 function PublishRide() {
@@ -70,19 +73,22 @@ function PublishRide() {
     from: '',
     to: '',
     date: moment(),
-    time: moment().startOf('hour'),
     price: '',
     whatsappNumber: '',
     note: '',
     carType: '',
   });
+  
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    
     setError('');
   };
 
@@ -105,10 +111,6 @@ function PublishRide() {
     }
     if (!formData.date) {
       setError('الرجاء تحديد التاريخ');
-      return false;
-    }
-    if (!formData.time) {
-      setError('الرجاء تحديد الوقت');
       return false;
     }
     if (!formData.price) {
@@ -136,12 +138,13 @@ function PublishRide() {
       const formattedDate = formatDate(formData.date);
       console.log('Publishing ride with date:', formattedDate);
 
+      // Add all the regular fields
       const rideData = {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
         'Destination city': formData.to,
         'Date': formattedDate,
-        'Time': formatTime(formData.time),
+        'Time': '12:00 PM', // Default time since we removed the time picker
         'Seats Available': "4",
         'Price per Seat': String(formData.price),
         'WhatsApp Number': formData.whatsappNumber,
@@ -149,6 +152,8 @@ function PublishRide() {
         'Note': formData.note || '',
         'Status': 'Active'
       };
+      
+      // Image upload feature has been removed
 
       const newRide = await createRide(rideData);
       
@@ -197,7 +202,7 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
   };
 
   return (
-    <Layout title="نشر رحلة">
+    <Layout>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="ar">
         <Container maxWidth="sm">
           <Box sx={{ mt: 4, mb: 4 }}>
@@ -310,27 +315,6 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   minDate={moment()}
                 />
 
-                <TimePicker
-                  label="وقت المغادرة *"
-                  value={formData.time}
-                  onChange={(newValue) => {
-                    setFormData((prev) => ({ ...prev, time: newValue }));
-                    setError('');
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      fullWidth
-                      size="medium"
-                      InputProps={{
-                        ...params.InputProps,
-                        sx: { bgcolor: 'background.paper' }
-                      }}
-                    />
-                  )}
-                />
-
                 <TextField
                   label="رقم الواتساب *"
                   name="whatsappNumber"
@@ -363,14 +347,14 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                 <TextField
                   label="السعر للمقعد الواحد *"
                   name="price"
-                  type="number"
+                  type="text"
                   value={formData.price}
                   onChange={handleChange}
                   required
                   fullWidth
                   size="medium"
                   InputProps={{
-                    startAdornment: <InputAdornment position="start">IQD</InputAdornment>,
+                    startAdornment: <InputAdornment position="start">دينار عراقي</InputAdornment>,
                     sx: { bgcolor: 'background.paper' }
                   }}
                 />
@@ -384,10 +368,13 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   rows={4}
                   fullWidth
                   size="medium"
+                  placeholder="مثال: اكدر اخذك من البيت"
                   InputProps={{
                     sx: { bgcolor: 'background.paper' }
                   }}
                 />
+                
+                {/* Image upload feature has been removed */}
 
                 <Button
                   type="submit"

@@ -5,10 +5,6 @@ import moment from 'moment';
 const AIRTABLE_API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
-console.log('Environment check:');
-console.log('API Key exists:', !!AIRTABLE_API_KEY);
-console.log('Base ID exists:', !!AIRTABLE_BASE_ID);
-
 if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
   throw new Error('Missing required environment variables');
 }
@@ -19,16 +15,13 @@ Airtable.configure({
   endpointUrl: 'https://api.airtable.com',
 });
 
-const base = Airtable.base(AIRTABLE_BASE_ID);
+export const base = Airtable.base(AIRTABLE_BASE_ID);
 
 // Log the table names we're trying to access
-console.log('Attempting to access tables:', {
-  publishedRides: 'Published Rides',
-  rideRequests: 'Ride Requests'
-});
+// Initialize tables
 
-const publishedRidesTable = base('Published Rides');
-const rideRequestsTable = base('Ride Requests');
+export const publishedRidesTable = base('Published Rides');
+export const rideRequestsTable = base('Ride Requests');
 
 export async function getTableSchema() {
   try {
@@ -46,7 +39,6 @@ export async function getTableSchema() {
     }
 
     const data = await response.json();
-    console.log('Table schema:', data);
     return data;
   } catch (error) {
     console.error('Error fetching schema:', error);
@@ -92,8 +84,7 @@ const formatWhatsAppNumber = (number) => {
   // Remove leading zero if present
   cleaned = cleaned.replace(/^0/, '');
   
-  console.log('Original number:', number);
-  console.log('Formatted number:', cleaned);
+  // Format phone number for consistency
   
   return cleaned;
 };
@@ -117,6 +108,12 @@ export async function createRide(rideData) {
         throw new Error(`الحقل ${field} مطلوب`);
       }
     }
+    
+    // Image upload feature has been removed
+    // Remove any image fields if they exist
+    delete rideData['image'];
+    delete rideData['imageUrl'];
+    delete rideData['imageAttachment'];
 
     const requestBody = {
       records: [
@@ -139,19 +136,29 @@ export async function createRide(rideData) {
       ],
     };
     
-    console.log('Creating ride with request body:', requestBody);
+    // Image attachment feature has been removed
+    
+    console.log('Creating ride with request body:', JSON.stringify(requestBody, null, 2));
+    
+    // Log the exact table name and API key (with partial masking for security)
+    const baseId = import.meta.env.VITE_AIRTABLE_BASE_ID;
+    const apiKey = import.meta.env.VITE_AIRTABLE_API_KEY;
+    const maskedApiKey = apiKey.substring(0, 5) + '...' + apiKey.substring(apiKey.length - 5);
+    console.log(`Using Airtable Base ID: ${baseId}, API Key: ${maskedApiKey}`);
     
     const response = await fetch(
-      `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Published Rides`,
+      `https://api.airtable.com/v0/${baseId}/Published Rides`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(requestBody),
       }
     );
+    
+    console.log('Airtable response status:', response.status);
 
     const responseData = await response.json();
     
@@ -199,41 +206,130 @@ async function listAllRides() {
   }
 }
 
-export async function searchRides({ startingCity, destinationCity, date }) {
+export async function searchRides({ startingCity, destinationCity }) {
   try {
-    if (!startingCity || !destinationCity || !date) {
-      throw new Error('جميع الحقول مطلوبة للبحث');
+    console.log('searchRides called with:', { startingCity, destinationCity });
+    
+    if (!startingCity || !destinationCity) {
+      console.log('Missing required parameters');
+      throw new Error('مدينة الانطلاق والوصول مطلوبة للبحث');
     }
 
-    const cleanStartingCity = startingCity.toLowerCase().trim();
-    const cleanDestinationCity = destinationCity.toLowerCase().trim();
-
-    const filterByFormula = `AND(
-      LOWER({Starting city}) = "${cleanStartingCity}",
-      LOWER({Destination city}) = "${cleanDestinationCity}",
-      {Date} = "${date}",
+    // Search for published rides with exact match
+    
+    // Use a simpler approach similar to getMatchingRideRequests but without date filtering
+    // This formula will match exact city names
+    const exactMatchFormula = `AND(
+      {Starting city} = '${startingCity}',
+      {Destination city} = '${destinationCity}',
       NOT({Cancelled})
-    )`.replace(/\s+/g, ' ').trim();
-
-    console.log('Filter formula:', filterByFormula);
-
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Published Rides?filterByFormula=${encodeURIComponent(filterByFormula)}`;
-
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch rides');
+    )`;
+    
+    // Apply the filter formula
+    
+    // First try with exact match
+    let records = await publishedRidesTable.select({
+      filterByFormula: exactMatchFormula,
+      sort: [{ field: 'Created', direction: 'desc' }]
+    }).all();
+    
+    console.log('DEBUG: Exact match results count:', records.length);
+    
+    // If no exact matches, try getting all rides and filter manually
+    if (records.length === 0) {
+      console.log('DEBUG: No exact matches found, trying to get all rides and filter manually');
+      
+      // Get all non-cancelled rides
+      const allRides = await publishedRidesTable.select({
+        filterByFormula: 'NOT({Cancelled})',
+        sort: [{ field: 'Created', direction: 'desc' }]
+      }).all();
+      
+      console.log('DEBUG: Total published rides found:', allRides.length);
+      
+      // Log all rides for debugging
+      allRides.forEach(record => {
+        console.log('DEBUG: Ride in database:', {
+          id: record.id,
+          from: record.fields['Starting city'],
+          to: record.fields['Destination city'],
+          date: record.fields['Date']
+        });
+      });
+      
+      // Normalize function for Arabic text comparison
+      const normalizeArabic = (text) => {
+        if (!text) return '';
+        return text.toLowerCase()
+          .trim()
+          .normalize('NFD')
+          .replace(/[\u064B-\u065F]/g, ''); // Remove Arabic diacritics
+      };
+      
+      // Normalize input cities
+      const normalizedInputStart = normalizeArabic(startingCity);
+      const normalizedInputDest = normalizeArabic(destinationCity);
+      
+      console.log('DEBUG: Normalized input cities:', { normalizedInputStart, normalizedInputDest });
+      
+      // Filter rides manually with normalized text comparison
+      records = allRides.filter(record => {
+        const recordStartCity = record.fields['Starting city'] || '';
+        const recordDestCity = record.fields['Destination city'] || '';
+        
+        // Normalize record cities
+        const normalizedRecordStart = normalizeArabic(recordStartCity);
+        const normalizedRecordDest = normalizeArabic(recordDestCity);
+        
+        console.log('DEBUG: Comparing normalized cities:', {
+          normalizedRecordStart,
+          normalizedRecordDest,
+          normalizedInputStart,
+          normalizedInputDest,
+          startMatches: normalizedRecordStart === normalizedInputStart,
+          destMatches: normalizedRecordDest === normalizedInputDest
+        });
+        
+        // Check for exact matches with normalized text
+        return normalizedRecordStart === normalizedInputStart && 
+               normalizedRecordDest === normalizedInputDest;
+      });
+      
+      console.log('DEBUG: Normalized matching results count:', records.length);
+      
+      // If still no matches, try partial matching as a last resort
+      if (records.length === 0) {
+        console.log('DEBUG: No normalized matches found, trying partial matching');
+        
+        records = allRides.filter(record => {
+          const recordStartCity = normalizeArabic(record.fields['Starting city'] || '');
+          const recordDestCity = normalizeArabic(record.fields['Destination city'] || '');
+          
+          // Check for partial matches
+          const startMatches = recordStartCity.includes(normalizedInputStart) || 
+                              normalizedInputStart.includes(recordStartCity);
+                              
+          const destMatches = recordDestCity.includes(normalizedInputDest) || 
+                             normalizedInputDest.includes(recordDestCity);
+          
+          return startMatches && destMatches;
+        });
+        
+        console.log('DEBUG: Partial matching results count:', records.length);
+      }
     }
-
-    const data = await response.json();
-    return data.records || [];
+    
+    if (records.length > 0) {
+      console.log('DEBUG: First matching ride:', records[0].fields);
+    } else {
+      console.log('DEBUG: No rides found for this route');
+    }
+    
+    return records;
   } catch (error) {
     console.error('Error searching rides:', error);
-    throw new Error('حدث خطأ في البحث عن الرحلات');
+    // Return empty array instead of throwing error
+    return [];
   }
 }
 
@@ -266,7 +362,9 @@ export async function createRideRequest({
                 'starting area': startingArea,
                 'Destination city': destinationCity,
                 'destination area': destinationArea,
-                'Date': date,
+                'Date': moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).isValid() 
+                  ? moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD')
+                  : date,
                 'Seats': seats.toString(),
                 'WhatsApp Number': formatWhatsAppNumber(whatsappNumber),
                 'Note': note || '',
@@ -297,13 +395,23 @@ export async function getMatchingRideRequests(from, to, date) {
       throw new Error('بيانات البحث غير مكتملة');
     }
 
-    console.log('Searching for matching requests with:', { from, to, date });
+    // Ensure date is in the correct format for Airtable
+    let formattedDate = date;
+    if (date) {
+      // Try to parse the date with moment
+      const momentDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true);
+      if (momentDate.isValid()) {
+        formattedDate = momentDate.format('YYYY-MM-DD');
+      }
+    }
+
+    console.log('Searching for matching requests with:', { from, to, date: formattedDate });
     
     // Get all active ride requests for the same date, from, and to
     const formula = `AND(
       {Starting city} = '${from}',
       {Destination city} = '${to}',
-      {Date} = '${date}'
+      {Date} = '${formattedDate}'
     )`;
     
     console.log('Filter formula:', formula);
@@ -395,7 +503,10 @@ export const getAllRideRequests = async () => {
 
 export async function searchRideRequests({ startingCity, destinationCity, date }) {
   try {
-    const formattedDate = moment(date).format('YYYY/MM/DD');
+    // Ensure date is in the correct format (YYYY-MM-DD)
+    const formattedDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).isValid()
+      ? moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD')
+      : date;
     
     // Clean up city names
     const cleanStartingCity = startingCity.trim().toLowerCase();

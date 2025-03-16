@@ -2,11 +2,13 @@
   font-family: 'Cairo', sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  font-size: 16px;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
@@ -19,23 +21,43 @@ body {
   direction: rtl;
   margin: 0;
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  background-color: #f5f5f5;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 600px) {
+  :root {
+    font-size: 14px;
+  }
+
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 2.5em;
   line-height: 1.1;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2em;
+  }
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #ff9800;
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
+a:hover, a:active {
+  color: #f57c00;
 }
 
 button {
@@ -45,27 +67,78 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #ff9800;
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.25s, transform 0.1s;
+  touch-action: manipulation;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: #f57c00;
+}
+button:active {
+  transform: scale(0.98);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px solid rgba(255, 152, 0, 0.5);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
+/* Touch-friendly button size on mobile */
+@media (max-width: 600px) {
   button {
-    background-color: #f9f9f9;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Add responsive utilities */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .mobile-only {
+    display: block;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Add PWA installation prompt styles */
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.install-prompt button {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 200px;
+}
+
+/* Add safe area insets for iOS devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }

@@ -30,20 +30,48 @@ const MatchingRequests = () => {
   useEffect(() => {
     const loadRequests = async () => {
       if (!rideData) {
+        console.error('No ride data provided');
         navigate('/');
         return;
       }
 
+      console.log('Ride data received:', rideData);
+
+      if (!rideData.from || !rideData.to || !rideData.date) {
+        console.error('Missing required ride data:', rideData);
+        setError('بيانات الرحلة غير مكتملة');
+        setLoading(false);
+        return;
+      }
+
       try {
+        // Ensure date is in the correct format (YYYY-MM-DD)
+        let formattedDate = rideData.date;
+        if (rideData.date) {
+          // Convert to ISO format if needed
+          const momentDate = moment(rideData.date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true);
+          if (momentDate.isValid()) {
+            formattedDate = momentDate.format('YYYY-MM-DD');
+          }
+        }
+        
+        console.log('Loading matching requests with:', {
+          from: rideData.from,
+          to: rideData.to,
+          date: formattedDate
+        });
+        
         const data = await getMatchingRideRequests(
           rideData.from,
           rideData.to,
-          rideData.date
+          formattedDate
         );
+        
+        console.log('Matching requests loaded:', data);
         setRequests(data);
       } catch (error) {
         console.error('Error loading requests:', error);
-        setError('حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة مرة أخرى.');
+        setError(error.message || 'حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة مرة أخرى.');
       } finally {
         setLoading(false);
       }
@@ -112,7 +140,7 @@ const MatchingRequests = () => {
             من {rideData.from} إلى {rideData.to}
           </Typography>
           <Typography>
-            التاريخ: {moment(rideData.date).format('LL')}
+            التاريخ: {rideData.date ? moment(rideData.date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('LL') : rideData.date}
           </Typography>
         </Box>
 

@@ -1,25 +1,26 @@
-import { Box, Container, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import SearchIcon from '@mui/icons-material/Search';
 import Layout from '../components/Layout';
+import ResponsiveContainer from '../components/ResponsiveContainer';
 
 const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
   return (
-    <Layout title="الصفحة الرئيسية">
-      <Container maxWidth="lg">
+    <Layout>
+      <ResponsiveContainer maxWidth="lg">
         <Box
           sx={{
-            minHeight: '80vh',
+            minHeight: { xs: 'calc(100vh - 120px)', md: '80vh' },
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             gap: { xs: 3, md: 5 },
-            py: 4,
+            py: { xs: 2, md: 4 },
           }}
         >
           <Typography
@@ -163,7 +164,7 @@ const Home = () => {
             </Paper>
           </Box>
         </Box>
-      </Container>
+      </ResponsiveContainer>
     </Layout>
   );
 };
