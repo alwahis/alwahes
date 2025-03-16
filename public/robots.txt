@@ -1,0 +1,11 @@
+# Alwahes Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://alwahes.vercel.app/sitemap.xml
+
+# Disallow specific paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /node_modules/
