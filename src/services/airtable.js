@@ -345,42 +345,97 @@ export async function createRideRequest({
   note,
 }) {
   try {
+    console.log('createRideRequest called with:', {
+      name,
+      startingCity,
+      startingArea,
+      destinationCity,
+      destinationArea,
+      date,
+      seats,
+      whatsappNumber,
+      note,
+    });
+
+    // Validate required fields
+    if (!name) {
+      console.error('Missing required field: name');
+      throw new Error('الاسم مطلوب');
+    }
+    if (!startingCity) {
+      console.error('Missing required field: startingCity');
+      throw new Error('مدينة الانطلاق مطلوبة');
+    }
+    if (!destinationCity) {
+      console.error('Missing required field: destinationCity');
+      throw new Error('مدينة الوصول مطلوبة');
+    }
+    if (!date) {
+      console.error('Missing required field: date');
+      throw new Error('التاريخ مطلوب');
+    }
+    if (!seats) {
+      console.error('Missing required field: seats');
+      throw new Error('عدد المقاعد مطلوب');
+    }
+    if (!whatsappNumber) {
+      console.error('Missing required field: whatsappNumber');
+      throw new Error('رقم الواتساب مطلوب');
+    }
+
+    const formattedDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).isValid() 
+      ? moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD')
+      : date;
+    
+    console.log('Formatted date:', formattedDate);
+    console.log('API Key:', import.meta.env.VITE_AIRTABLE_API_KEY ? 'exists' : 'missing');
+    console.log('Base ID:', import.meta.env.VITE_AIRTABLE_BASE_ID ? 'exists' : 'missing');
+    
+    const requestBody = {
+      records: [
+        {
+          fields: {
+            'Name': name,
+            'Starting city': startingCity,
+            'starting area': startingArea || '',
+            'Destination city': destinationCity,
+            'destination area': destinationArea || '',
+            'Date': formattedDate,
+            'Seats': seats.toString(),
+            'WhatsApp Number': formatWhatsAppNumber(whatsappNumber),
+            'Note': note || '',
+          },
+        },
+      ],
+    };
+    
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
+    const apiUrl = `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests`;
+    console.log('API URL:', apiUrl);
+    
     const response = await fetch(
-      `https://api.airtable.com/v0/${import.meta.env.VITE_AIRTABLE_BASE_ID}/Ride Requests`,
+      apiUrl,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_AIRTABLE_API_KEY}`,
         },
-        body: JSON.stringify({
-          records: [
-            {
-              fields: {
-                'Name': name,
-                'Starting city': startingCity,
-                'starting area': startingArea,
-                'Destination city': destinationCity,
-                'destination area': destinationArea,
-                'Date': moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).isValid() 
-                  ? moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD')
-                  : date,
-                'Seats': seats.toString(),
-                'WhatsApp Number': formatWhatsAppNumber(whatsappNumber),
-                'Note': note || '',
-              },
-            },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
-
+    
+    console.log('Response status:', response.status);
+    
     if (!response.ok) {
       const error = await response.json();
+      console.error('Airtable API error:', error);
       throw new Error(error.error.message);
     }
 
     const result = await response.json();
+    console.log('Airtable API success response:', result);
     return result.records[0];
   } catch (error) {
     console.error('Error creating ride request:', error);
@@ -565,7 +620,6 @@ export async function cancelRide(rideId) {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Airtable error response:', error);
       throw new Error(error.error.message || 'Failed to cancel ride');
     }
 
