@@ -57,6 +57,7 @@ const RequestRide = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
+    name: '',
     startingCity: startingCity || '',
     destinationCity: destinationCity || '',
     date: date ? moment(date) : moment(),
@@ -66,6 +67,10 @@ const RequestRide = () => {
   });
 
   const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError('الرجاء إدخال الاسم');
+      return false;
+    }
     if (!formData.startingCity.trim()) {
       setError('الرجاء اختيار مدينة الانطلاق');
       return false;
@@ -157,6 +162,17 @@ const RequestRide = () => {
             
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
+                <TextField
+                  label="الاسم"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  fullWidth
+                  error={Boolean(error && !formData.name.trim())}
+                  size="medium"
+                />
+                
                 <TextField
                   select
                   label="مدينة الانطلاق"
