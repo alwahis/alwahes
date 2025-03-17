@@ -13,16 +13,32 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import PersonIcon from '@mui/icons-material/Person';
+
+// Helper function to safely get field values with defaults
+const getFieldValue = (ride, fieldName, defaultValue = 'غير محدد') => {
+  return ride.fields && ride.fields[fieldName] ? ride.fields[fieldName] : defaultValue;
+};
 
 const RideCard = ({ ride }) => {
+  // Extract data with defaults to prevent undefined values
+  const driverName = getFieldValue(ride, 'Name of Driver');
+  const startPoint = getFieldValue(ride, 'Starting Point') || getFieldValue(ride, 'Starting city');
+  const destination = getFieldValue(ride, 'Destination') || getFieldValue(ride, 'Destination city');
+  const time = getFieldValue(ride, 'Time');
+  const date = getFieldValue(ride, 'Date');
+  const seatsAvailable = getFieldValue(ride, 'Seats Available', '1');
+  const pricePerSeat = getFieldValue(ride, 'Price per Seat', '0');
+  const carType = getFieldValue(ride, 'Car Type');
+  const description = getFieldValue(ride, 'Description', '');
+  const whatsappNumber = getFieldValue(ride, 'WhatsApp Number', '07850244072');
+  
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
-      `مرحبا، أنا مهتم برحلتك من ${ride.fields['Starting Point']} إلى ${
-        ride.fields['Destination']
-      }`
+      `مرحبا، أنا مهتم برحلتك من ${startPoint} إلى ${destination}`
     );
     window.open(
-      `https://wa.me/${ride.fields['WhatsApp Number']}?text=${message}`,
+      `https://wa.me/${whatsappNumber}?text=${message}`,
       '_blank'
     );
   };
@@ -32,31 +48,40 @@ const RideCard = ({ ride }) => {
       <CardContent>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Typography variant="h6" component="div" gutterBottom>
-              {ride.fields['Name of Driver']}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <PersonIcon color="primary" />
+              <Typography variant="h6" component="div" gutterBottom>
+                {driverName}
+              </Typography>
+            </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <LocationOnIcon color="primary" />
               <Typography>
-                من: {ride.fields['Starting Point']}
+                من: {startPoint}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LocationOnIcon color="primary" />
               <Typography>
-                إلى: {ride.fields['Destination']}
+                إلى: {destination}
               </Typography>
             </Box>
           </Grid>
 
           <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <EventIcon color="primary" />
+              <Typography>
+                التاريخ: {date}
+              </Typography>
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <AccessTimeIcon color="primary" />
               <Typography>
-                الوقت: {ride.fields['Time'] || 'غير محدد'}
+                الوقت: {time}
               </Typography>
             </Box>
           </Grid>
@@ -65,13 +90,13 @@ const RideCard = ({ ride }) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <AirlineSeatReclineNormalIcon color="primary" />
               <Typography>
-                المقاعد المتاحة: {ride.fields['Seats Available'] || 0}
+                المقاعد المتاحة: {seatsAvailable}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <AttachMoneyIcon color="primary" />
               <Typography>
-                السعر لكل مقعد: {ride.fields['Price per Seat'] || 0} د.ع
+                السعر لكل مقعد: {pricePerSeat} د.ع
               </Typography>
             </Box>
           </Grid>
@@ -80,13 +105,13 @@ const RideCard = ({ ride }) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <DirectionsCarIcon color="primary" />
               <Typography>
-                نوع السيارة: {ride.fields['Car Type'] || 'غير محدد'}
+                نوع السيارة: {carType}
               </Typography>
             </Box>
-            {ride.fields['Description'] && (
+            {description && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <Typography>
-                  ملاحظات: {ride.fields['Description']}
+                  ملاحظات: {description}
                 </Typography>
               </Box>
             )}
