@@ -10,8 +10,18 @@ import {
   IconButton,
   BottomNavigation,
   BottomNavigationAction,
+  Link,
+  Grid,
+  Divider,
 } from '@mui/material';
-import { ArrowForward, Person, Search, DirectionsCar } from '@mui/icons-material';
+import { 
+  ArrowForward, 
+  Person, 
+  Search, 
+  DirectionsCar,
+  Facebook as FacebookIcon,
+  Instagram as InstagramIcon 
+} from '@mui/icons-material';
 
 const pages = [
   { title: 'نشر رحلة', path: '/publish-ride' },
@@ -50,13 +60,21 @@ const Layout = ({ children, title }) => {
                 display: 'flex',
                 cursor: 'pointer',
                 justifyContent: { xs: 'center', md: 'flex-start' },
+                alignItems: 'center',
                 '&:hover': {
                   opacity: 0.8,
                 },
                 mr: 2
               }}
             >
-              عالواهس
+              <img 
+                src="/icons/logo.svg?v=2" 
+                alt="عالواهس"
+                style={{
+                  height: '32px',
+                  width: 'auto'
+                }}
+              />
             </Typography>
             
             {title && (
@@ -98,6 +116,7 @@ const Layout = ({ children, title }) => {
                 color="inherit"
                 onClick={() => navigate(-1)}
                 sx={{ ml: 2 }}
+                aria-label="العودة للصفحة السابقة"
               >
                 <ArrowForward />
               </IconButton>
@@ -186,7 +205,93 @@ const Layout = ({ children, title }) => {
               : theme.palette.grey[800],
         }}
       >
-        <Container maxWidth="sm">
+        <Container maxWidth="lg">
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" color="text.primary" gutterBottom>
+                عالواهس
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                منصة لمشاركة الرحلات والتنقل بين المدن العراقية
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" color="text.primary" gutterBottom>
+                روابط سريعة
+              </Typography>
+              <Box component="nav">
+                <Link 
+                  component="button" 
+                  variant="body2" 
+                  onClick={() => navigate('/')}
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  الرئيسية
+                </Link>
+                <Link 
+                  component="button" 
+                  variant="body2" 
+                  onClick={() => navigate('/publish-ride')}
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  نشر رحلة
+                </Link>
+                <Link 
+                  component="button" 
+                  variant="body2" 
+                  onClick={() => navigate('/request-ride')}
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  بحث عن رحلة
+                </Link>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" color="text.primary" gutterBottom>
+                تواصل معنا
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <IconButton 
+                  href="https://www.facebook.com/profile.php?id=61572519516458"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  sx={{ 
+                    color: '#3b5998',
+                    backgroundColor: 'rgba(59, 89, 152, 0.1)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(59, 89, 152, 0.2)',
+                    }
+                  }}
+                >
+                  <FacebookIcon />
+                </IconButton>
+                <IconButton 
+                  href="https://www.instagram.com/alwahes1?igsh=ZHV3dnZwZGsxNXA="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  sx={{ 
+                    color: '#e1306c',
+                    backgroundColor: 'rgba(225, 48, 108, 0.1)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(225, 48, 108, 0.2)',
+                    }
+                  }}
+                >
+                  <InstagramIcon />
+                </IconButton>
+              </Box>
+            </Grid>
+          </Grid>
+          
+          <Divider sx={{ my: 2 }} />
+          
           <Typography variant="body2" color="text.secondary" align="center">
             {new Date().getFullYear()} عالواهس. جميع الحقوق محفوظة
           </Typography>

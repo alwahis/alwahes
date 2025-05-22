@@ -206,126 +206,43 @@ async function listAllRides() {
   }
 }
 
-export async function searchRides({ startingCity, destinationCity }) {
+export async function searchRides({ startingCity, destinationCity, date }) {
   try {
-    console.log('searchRides called with:', { startingCity, destinationCity });
-    
-    if (!startingCity || !destinationCity) {
-      console.log('Missing required parameters');
-      throw new Error('مدينة الانطلاق والوصول مطلوبة للبحث');
+    if (!startingCity || !destinationCity || !date) {
+      throw new Error('جميع الحقول مطلوبة للبحث');
     }
 
-    // Search for published rides with exact match
+    // Format the date to match Airtable's format (YYYY-MM-DD)
+    const formattedDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD');
     
-    // Use a simpler approach similar to getMatchingRideRequests but without date filtering
-    // This formula will match exact city names
-    const exactMatchFormula = `AND(
-      {Starting city} = '${startingCity}',
-      {Destination city} = '${destinationCity}',
-      NOT({Cancelled})
-    )`;
+    // Normalize city names for case-insensitive comparison
+    const normalizeText = (text) => (text || '').toLowerCase().trim().normalize('NFD').replace(/[\u064B-\u065F]/g, '');
     
-    // Apply the filter formula
-    
-    // First try with exact match
-    let records = await publishedRidesTable.select({
-      filterByFormula: exactMatchFormula,
+    const normalizedStartCity = normalizeText(startingCity);
+    const normalizedDestCity = normalizeText(destinationCity);
+
+    // First, get all non-cancelled rides for the selected date
+    const allRides = await publishedRidesTable.select({
+      filterByFormula: `AND(
+        {Date} = "${formattedDate}",
+        NOT({Cancelled})
+      )`,
       sort: [{ field: 'Created', direction: 'desc' }]
     }).all();
-    
-    console.log('DEBUG: Exact match results count:', records.length);
-    
-    // If no exact matches, try getting all rides and filter manually
-    if (records.length === 0) {
-      console.log('DEBUG: No exact matches found, trying to get all rides and filter manually');
+
+    console.log(`Found ${allRides.length} rides on ${formattedDate}`);
+
+    // Filter rides by city matches (case and diacritic insensitive)
+    const matchingRides = allRides.filter(ride => {
+      const rideStartCity = normalizeText(ride.fields['Starting city']);
+      const rideDestCity = normalizeText(ride.fields['Destination city']);
       
-      // Get all non-cancelled rides
-      const allRides = await publishedRidesTable.select({
-        filterByFormula: 'NOT({Cancelled})',
-        sort: [{ field: 'Created', direction: 'desc' }]
-      }).all();
-      
-      console.log('DEBUG: Total published rides found:', allRides.length);
-      
-      // Log all rides for debugging
-      allRides.forEach(record => {
-        console.log('DEBUG: Ride in database:', {
-          id: record.id,
-          from: record.fields['Starting city'],
-          to: record.fields['Destination city'],
-          date: record.fields['Date']
-        });
-      });
-      
-      // Normalize function for Arabic text comparison
-      const normalizeArabic = (text) => {
-        if (!text) return '';
-        return text.toLowerCase()
-          .trim()
-          .normalize('NFD')
-          .replace(/[\u064B-\u065F]/g, ''); // Remove Arabic diacritics
-      };
-      
-      // Normalize input cities
-      const normalizedInputStart = normalizeArabic(startingCity);
-      const normalizedInputDest = normalizeArabic(destinationCity);
-      
-      console.log('DEBUG: Normalized input cities:', { normalizedInputStart, normalizedInputDest });
-      
-      // Filter rides manually with normalized text comparison
-      records = allRides.filter(record => {
-        const recordStartCity = record.fields['Starting city'] || '';
-        const recordDestCity = record.fields['Destination city'] || '';
-        
-        // Normalize record cities
-        const normalizedRecordStart = normalizeArabic(recordStartCity);
-        const normalizedRecordDest = normalizeArabic(recordDestCity);
-        
-        console.log('DEBUG: Comparing normalized cities:', {
-          normalizedRecordStart,
-          normalizedRecordDest,
-          normalizedInputStart,
-          normalizedInputDest,
-          startMatches: normalizedRecordStart === normalizedInputStart,
-          destMatches: normalizedRecordDest === normalizedInputDest
-        });
-        
-        // Check for exact matches with normalized text
-        return normalizedRecordStart === normalizedInputStart && 
-               normalizedRecordDest === normalizedInputDest;
-      });
-      
-      console.log('DEBUG: Normalized matching results count:', records.length);
-      
-      // If still no matches, try partial matching as a last resort
-      if (records.length === 0) {
-        console.log('DEBUG: No normalized matches found, trying partial matching');
-        
-        records = allRides.filter(record => {
-          const recordStartCity = normalizeArabic(record.fields['Starting city'] || '');
-          const recordDestCity = normalizeArabic(record.fields['Destination city'] || '');
-          
-          // Check for partial matches
-          const startMatches = recordStartCity.includes(normalizedInputStart) || 
-                              normalizedInputStart.includes(recordStartCity);
-                              
-          const destMatches = recordDestCity.includes(normalizedInputDest) || 
-                             normalizedInputDest.includes(recordDestCity);
-          
-          return startMatches && destMatches;
-        });
-        
-        console.log('DEBUG: Partial matching results count:', records.length);
-      }
-    }
-    
-    if (records.length > 0) {
-      console.log('DEBUG: First matching ride:', records[0].fields);
-    } else {
-      console.log('DEBUG: No rides found for this route');
-    }
-    
-    return records;
+      return rideStartCity === normalizedStartCity && 
+             rideDestCity === normalizedDestCity;
+    });
+
+    console.log(`Found ${matchingRides.length} matching rides for ${normalizedStartCity} to ${normalizedDestCity}`);
+    return matchingRides;
   } catch (error) {
     console.error('Error searching rides:', error);
     // Return empty array instead of throwing error

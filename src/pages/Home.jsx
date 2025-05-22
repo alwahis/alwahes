@@ -1,16 +1,49 @@
-import { Box, Typography, Paper, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Typography, Paper, useTheme, useMediaQuery, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import SearchIcon from '@mui/icons-material/Search';
 import Layout from '../components/Layout';
 import ResponsiveContainer from '../components/ResponsiveContainer';
+import SEO from '../components/SEO';
 
 const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  // Structured data for rich results
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "عالواهس - منصة مشاركة الرحلات",
+    "url": "https://www.alwahes.com",
+    "applicationCategory": "TransportationApplication",
+    "operatingSystem": "Web, iOS, Android",
+    "description": "منصة عالواهس لمشاركة الرحلات والتنقل بين المدن العراقية بسهولة وأمان",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "IQD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "عالواهس",
+      "url": "https://www.alwahes.com",
+      "logo": "https://www.alwahes.com/icons/logo.svg",
+      "sameAs": [
+        "https://www.facebook.com/profile.php?id=61572519516458",
+        "https://www.instagram.com/alwahes1?igsh=ZHV3dnZwZGsxNXA="
+      ]
+    }
+  };
+
   return (
     <Layout>
+      <SEO 
+        title="عالواهس - منصة مشاركة الرحلات للمدن العراقية | Alwahes"
+        description="عالواهس هي منصة عراقية لمشاركة الرحلات والتنقل بين المدن العراقية. وفر المال والوقت من خلال العثور على رحلات مشتركة أو نشر رحلتك الخاصة."
+        canonicalUrl="https://www.alwahes.com/"
+        structuredData={structuredData}
+      />
       <ResponsiveContainer maxWidth="lg">
         <Box
           sx={{
@@ -23,20 +56,27 @@ const Home = () => {
             py: { xs: 2, md: 4 },
           }}
         >
-          <Typography
-            variant="h2"
-            component="h1"
-            align="center"
-            gutterBottom
+          <Box
             sx={{
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              fontWeight: 'bold',
-              color: theme.palette.primary.main,
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: 2,
+              width: '100%',
+              maxWidth: '350px'
             }}
           >
-            عالواهس
-          </Typography>
+            <img
+              src="/images/logo-full.png"
+              alt="عالواهس Logo"
+              style={{
+                width: '100%',
+                height: 'auto',
+                margin: '0 auto 10px auto',
+                borderRadius: '8px'
+              }}
+            />
+          </Box>
 
           <Typography
             variant="h5"

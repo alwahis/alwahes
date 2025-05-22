@@ -1,44 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://alwahes.vercel.app/</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/publish-ride</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/landing</loc>
+    <lastmod>2023-07-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.alwahes.com/publish-ride</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/search-results</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/search-results</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/my-rides</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/my-rides</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/request-ride</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/request-ride</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/matching-requests</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/matching-requests</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://alwahes.vercel.app/all-ride-requests</loc>
-    <lastmod>2025-03-16</lastmod>
+    <loc>https://www.alwahes.com/all-ride-requests</loc>
+    <lastmod>2023-07-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

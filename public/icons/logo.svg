@@ -1,7 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="15%" fill="#ff9800"/>
-  <path fill="#fff" d="M120 376v-40c0-88.4 71.6-160 160-160s160 71.6 160 160v40"/>
-  <circle cx="160" cy="376" r="40" fill="#fff"/>
-  <circle cx="352" cy="376" r="40" fill="#fff"/>
-  <path fill="#fff" d="M256 176v80M296 216h-80"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="60" fill="#ff7800" rx="5" ry="5"/>
+  <!-- Simple car icon -->
+  <g transform="translate(70, 15)">
+    <!-- Car body -->
+    <rect x="0" y="10" width="60" height="20" fill="white" rx="5"/>
+    <!-- Car top -->
+    <rect x="10" y="0" width="40" height="15" fill="white" rx="3"/>
+    <!-- Wheels -->
+    <circle cx="15" cy="30" r="6" fill="#333"/>
+    <circle cx="45" cy="30" r="6" fill="#333"/>
+    <!-- Windows -->
+    <rect x="15" y="5" width="30" height="8" fill="#ff7800" rx="2"/>
+  </g>
 </svg>

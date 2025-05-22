@@ -12,6 +12,7 @@ import MatchingRequests from './pages/MatchingRequests';
 import AllRideRequests from './pages/AllRideRequests';
 import Test from './test';
 import TestRides from './pages/TestRides';
+import LandingPage from './pages/LandingPage';
 import { Toaster } from 'react-hot-toast';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -24,6 +25,7 @@ import PullToRefresh from './components/PullToRefresh';
 import OfflineManager from './components/OfflineManager';
 import AppUpdater from './components/AppUpdater';
 import { useState } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 
 function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -38,49 +40,52 @@ function App() {
   };
 
   return (
-    <CacheProvider value={cacheRtl}>
-      <ThemeProvider theme={theme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ar}>
-          <CssBaseline />
-          <Router>
-            <Toaster
-              position="top-center"
-              toastOptions={{
-                style: {
-                  background: theme.palette.background.paper,
-                  color: theme.palette.text.primary,
-                  fontFamily: theme.typography.fontFamily,
-                  fontSize: '1rem',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-                },
-              }}
-            />
-            <Analytics />
-            <InstallPWA />
-            <NetworkStatus />
-            <OfflineManager />
-            <AppUpdater />
-            <PullToRefresh onRefresh={handleRefresh}>
-              <Box sx={{ pb: { xs: '56px', sm: 0 } }}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/search-results" element={<SearchResults />} />
-                  <Route path="/results" element={<SearchResults />} />
-                  <Route path="/publish-ride" element={<PublishRide />} />
-                  <Route path="/my-rides" element={<MyRides />} />
-                  <Route path="/request-ride" element={<RequestRide />} />
-                  <Route path="/matching-requests" element={<MatchingRequests />} />
-                  <Route path="/all-ride-requests" element={<AllRideRequests />} />
-                  <Route path="/test-rides" element={<TestRides />} />
-                </Routes>
-                <MobileNavBar />
-              </Box>
-            </PullToRefresh>
-          </Router>
-        </LocalizationProvider>
-      </ThemeProvider>
-    </CacheProvider>
+    <HelmetProvider>
+      <CacheProvider value={cacheRtl}>
+        <ThemeProvider theme={theme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ar}>
+            <CssBaseline />
+            <Router>
+              <Toaster
+                position="top-center"
+                toastOptions={{
+                  style: {
+                    background: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
+                    fontFamily: theme.typography.fontFamily,
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+                  },
+                }}
+              />
+              <Analytics />
+              <InstallPWA />
+              <NetworkStatus />
+              <OfflineManager />
+              <AppUpdater />
+              <PullToRefresh onRefresh={handleRefresh}>
+                <Box sx={{ pb: { xs: '56px', sm: 0 } }}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/landing" element={<LandingPage />} />
+                    <Route path="/search-results" element={<SearchResults />} />
+                    <Route path="/results" element={<SearchResults />} />
+                    <Route path="/publish-ride" element={<PublishRide />} />
+                    <Route path="/my-rides" element={<MyRides />} />
+                    <Route path="/request-ride" element={<RequestRide />} />
+                    <Route path="/matching-requests" element={<MatchingRequests />} />
+                    <Route path="/all-ride-requests" element={<AllRideRequests />} />
+                    <Route path="/test-rides" element={<TestRides />} />
+                  </Routes>
+                  <MobileNavBar />
+                </Box>
+              </PullToRefresh>
+            </Router>
+          </LocalizationProvider>
+        </ThemeProvider>
+      </CacheProvider>
+    </HelmetProvider>
   );
 }
 

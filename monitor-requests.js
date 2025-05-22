@@ -103,12 +103,8 @@ function monitorXHR() {
   console.log('🔍 XHR monitoring enabled');
 }
 
-// Function to start monitoring
-function startMonitoring() {
-  monitorFetchRequests();
-  monitorXHR();
-  console.log('🔍 Network monitoring started. All fetch and XHR requests will be logged to the console.');
-}
++q436f+q6b75+q6b64+q6b72+q6b6c+q2332+q2334+q2569+q2a37+q6b31
+
 
 // Export the monitoring function to the global scope
 window.startMonitoring = startMonitoring;
