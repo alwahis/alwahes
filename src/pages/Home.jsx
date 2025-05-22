@@ -1,7 +1,7 @@
 import { Box, Typography, Paper, useTheme, useMediaQuery, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import SearchIcon from '@mui/icons-material/Search';
+import AddRoadIcon from '@mui/icons-material/AddRoad';
 import Layout from '../components/Layout';
 import ResponsiveContainer from '../components/ResponsiveContainer';
 import SEO from '../components/SEO';
@@ -173,7 +173,7 @@ const Home = () => {
               }}
               onClick={() => navigate('/publish-ride')}
             >
-              <DirectionsCarIcon
+              <AddRoadIcon 
                 sx={{
                   fontSize: 48,
                   color: theme.palette.primary.main,

@@ -130,10 +130,11 @@ export default function SearchResults() {
         const allRides = await fetchAllRides();
         console.log('DEBUG: Total rides in database:', allRides.length);
         
-        // Don't pass date parameter to show all rides regardless of date
+        // Pass the selected date to filter rides within a week
         const results = await searchRides({
           startingCity: searchParams.startingCity,
-          destinationCity: searchParams.destinationCity
+          destinationCity: searchParams.destinationCity,
+          date: searchParams.date // Pass the selected date
         });
         
         console.log('DEBUG: Search results:', results);
@@ -171,11 +172,11 @@ export default function SearchResults() {
           return ride;
         });
         
-        // Sort rides by date (most recent first)
+        // Sort rides by date (ascending - earliest first)
         const sortedRides = [...processedResults].sort((a, b) => {
           const dateA = a.fields['Date'] ? new Date(a.fields['Date']) : new Date(0);
           const dateB = b.fields['Date'] ? new Date(b.fields['Date']) : new Date(0);
-          return dateB - dateA; // Most recent first
+          return dateA - dateB; // Earliest first
         });
         
         setRides(sortedRides);

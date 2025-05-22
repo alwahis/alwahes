@@ -121,12 +121,12 @@ const RequestRide = () => {
       toast.success('تم إرسال طلب الرحلة بنجاح!');
 
       // Navigate to search results to show matching published rides
-      // Don't pass date parameter to show all rides regardless of date
+      // Pass the selected date to filter rides within a week
       navigate('/search-results', {
         state: {
           startingCity: formData.startingCity,
-          destinationCity: formData.destinationCity
-          // Date is intentionally omitted to show all rides regardless of date
+          destinationCity: formData.destinationCity,
+          date: formData.date.format('YYYY-MM-DD') // Pass the selected date
         }
       });
     } catch (error) {

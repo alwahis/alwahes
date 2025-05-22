@@ -206,43 +206,111 @@ async function listAllRides() {
   }
 }
 
+// Helper function to escape single quotes for Airtable formulas
+const escapeSingleQuotes = (str) => (str || '').replace(/'/g, "\\'");
+
 export async function searchRides({ startingCity, destinationCity, date }) {
   try {
-    if (!startingCity || !destinationCity || !date) {
-      throw new Error('جميع الحقول مطلوبة للبحث');
+    console.log('=== STARTING SEARCH RIDES ===');
+    
+    if (!startingCity || !destinationCity) {
+      console.error('Missing required fields - startingCity:', startingCity, 'destinationCity:', destinationCity);
+      throw new Error('مدينة الانطلاق والوصول مطلوبة للبحث');
     }
 
-    // Format the date to match Airtable's format (YYYY-MM-DD)
-    const formattedDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true).format('YYYY-MM-DD');
-    
-    // Normalize city names for case-insensitive comparison
-    const normalizeText = (text) => (text || '').toLowerCase().trim().normalize('NFD').replace(/[\u064B-\u065F]/g, '');
-    
-    const normalizedStartCity = normalizeText(startingCity);
-    const normalizedDestCity = normalizeText(destinationCity);
-
-    // First, get all non-cancelled rides for the selected date
-    const allRides = await publishedRidesTable.select({
-      filterByFormula: `AND(
-        {Date} = "${formattedDate}",
-        NOT({Cancelled})
-      )`,
-      sort: [{ field: 'Created', direction: 'desc' }]
-    }).all();
-
-    console.log(`Found ${allRides.length} rides on ${formattedDate}`);
-
-    // Filter rides by city matches (case and diacritic insensitive)
-    const matchingRides = allRides.filter(ride => {
-      const rideStartCity = normalizeText(ride.fields['Starting city']);
-      const rideDestCity = normalizeText(ride.fields['Destination city']);
-      
-      return rideStartCity === normalizedStartCity && 
-             rideDestCity === normalizedDestCity;
+    console.log('Searching for rides with params:', { 
+      startingCity, 
+      destinationCity, 
+      date,
+      dateType: date ? typeof date : 'no date provided'
     });
-
-    console.log(`Found ${matchingRides.length} matching rides for ${normalizedStartCity} to ${normalizedDestCity}`);
-    return matchingRides;
+    
+    // Format the date to match Airtable's format (YYYY-MM-DD)
+    let formattedDate = '';
+    if (date) {
+      console.log('Processing date input:', date);
+      const momentDate = moment(date, ['YYYY/MM/DD', 'YYYY-MM-DD'], true);
+      if (!momentDate.isValid()) {
+        console.error('Invalid date format:', date);
+        throw new Error('صيغة التاريخ غير صالحة');
+      }
+      formattedDate = momentDate.format('YYYY-MM-DD');
+      console.log('Formatted date:', formattedDate);
+    }
+    
+    // Create Airtable filter formula
+    let filterFormula = `AND(
+      TRIM(LOWER({Starting city})) = '${escapeSingleQuotes(startingCity).toLowerCase().trim()}',
+      TRIM(LOWER({Destination city})) = '${escapeSingleQuotes(destinationCity).toLowerCase().trim()}',
+      NOT({Cancelled})`;
+    
+    if (formattedDate) {
+      filterFormula += `, {Date} = '${formattedDate}'`;
+    }
+    
+    filterFormula += ')'
+    
+    console.log('Using Airtable filter formula:', filterFormula);
+    
+    // Query Airtable with the filter
+    const query = {
+      filterByFormula: filterFormula,
+      sort: [{ field: 'Date', direction: 'asc' }],
+      maxRecords: 100
+    };
+    
+    console.log('Executing Airtable query:', JSON.stringify(query, null, 2));
+    
+    try {
+      const results = await publishedRidesTable.select(query).all();
+      
+      console.log(`=== FOUND ${results.length} MATCHING RIDES ===`);
+      results.forEach((ride, index) => {
+        console.log(`Match #${index + 1}:`, {
+          id: ride.id,
+          from: ride.fields['Starting city'],
+          to: ride.fields['Destination city'],
+          date: ride.fields['Date'],
+          seats: ride.fields['Seats Available']
+        });
+      });
+      
+      return results;
+    } catch (error) {
+      console.error('Airtable API Error:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        errorData: error.errorData
+      });
+      
+      // Fallback to client-side filtering if the query fails
+      console.log('Falling back to client-side filtering...');
+      const allRides = await publishedRidesTable.select({
+        filterByFormula: 'NOT({Cancelled})',
+        maxRecords: 100
+      }).all();
+      
+      const normalizedSearchFrom = startingCity.toLowerCase().trim();
+      const normalizedSearchTo = destinationCity.toLowerCase().trim();
+      
+      const filteredRides = allRides.filter(ride => {
+        if (!ride.fields) return false;
+        
+        const rideFrom = (ride.fields['Starting city'] || '').toLowerCase().trim();
+        const rideTo = (ride.fields['Destination city'] || '').toLowerCase().trim();
+        const rideDate = ride.fields['Date'] || '';
+        
+        const cityMatch = rideFrom === normalizedSearchFrom && 
+                        rideTo === normalizedSearchTo;
+        
+        const dateMatch = !formattedDate || rideDate === formattedDate;
+        
+        return cityMatch && dateMatch;
+      });
+      
+      console.log(`Found ${filteredRides.length} rides with client-side filtering`);
+      return filteredRides;
+    }
   } catch (error) {
     console.error('Error searching rides:', error);
     // Return empty array instead of throwing error

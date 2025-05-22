@@ -55,9 +55,17 @@ const features = [
     description: 'ابحث عن رحلات بين المدن العراقية بسهولة وسرعة.'
   },
   {
-    icon: <DirectionsCarIcon fontSize="large" color="primary" />,
-    title: 'نشر رحلات',
-    description: 'أعلن عن رحلتك القادمة ووفر تكاليف السفر.'
+    icon: (
+      <Typography 
+        variant="h5" 
+        color="primary"
+        sx={{ fontWeight: 'bold', fontFamily: 'Tajawal, Arial, sans-serif' }}
+      >
+        عالواهس
+      </Typography>
+    ),
+    title: 'نشر رحلتك',
+    description: 'شارك رحلتك مع الآخرين ووفر تكاليف السفر',
   },
   {
     icon: <LocationOnIcon fontSize="large" color="primary" />,
@@ -197,7 +205,17 @@ const LandingPage = () => {
               size="large"
               component={RouterLink}
               to="/publish-ride" 
-              startIcon={<DirectionsCarIcon />}
+              startIcon={
+                <Typography 
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    fontFamily: 'Tajawal, Arial, sans-serif',
+                    fontSize: '1.2rem'
+                  }}
+                >
+                  عالواهس
+                </Typography>
+              }
               sx={{ 
                 py: 1.5, 
                 px: 4, 
