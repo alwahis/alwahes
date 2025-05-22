@@ -1,5 +1,4 @@
 {
-  "name": "alwahes",
   "version": 2,
   "builds": [
     {
@@ -16,9 +15,5 @@
   ],
   "github": {
     "silent": true
-  },
-  "domains": [
-    "www.alwahes.com",
-    "alwahes.com"
-  ]
+  }
 }
