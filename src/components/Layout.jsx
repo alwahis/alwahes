@@ -67,14 +67,17 @@ const Layout = ({ children, title }) => {
                 mr: 2
               }}
             >
-              <img 
-                src="/icons/logo.svg?v=2" 
-                alt="عالواهس"
-                style={{
-                  height: '32px',
-                  width: 'auto'
+              <Typography 
+                variant="h6" 
+                component="div"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '1.5rem',
+                  color: 'white'
                 }}
-              />
+              >
+                عالواهس
+              </Typography>
             </Typography>
             
             {title && (
