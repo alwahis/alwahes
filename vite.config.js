@@ -12,6 +12,53 @@ export default defineConfig(({ mode }) => ({
     'process.env': process.env,
     'process.env.NODE_ENV': JSON.stringify(mode)
   },
+
+  // Configure MIME types and server settings
+  server: {
+    headers: {
+      'Content-Type': 'text/javascript',
+      'X-Content-Type-Options': 'nosniff',
+      'Access-Control-Allow-Origin': '*'
+    },
+    fs: {
+      strict: true
+    },
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000
+    }
+  },
+  
+  // Configure MIME types for different file extensions
+  mimeTypes: {
+    'text/jsx': ['jsx'],
+    'text/javascript': ['mjs', 'js'],
+    'application/json': ['json'],
+    'text/css': ['css']
+  },
+  
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@mui/material', '@emotion/react', '@emotion/styled']
+  },
+
+  // Build configuration
+  build: {
+    sourcemap: mode === 'development',
+    minify: mode === 'production' ? 'esbuild' : false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@emotion/react', '@emotion/styled']
+        }
+      }
+    },
+    commonjsOptions: {
+      include: /node_modules/
+    }
+  },
   plugins: [
     react({
       // Add React Refresh
