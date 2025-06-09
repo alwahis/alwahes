@@ -2,10 +2,40 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Base URL for production
+  base: './',
+  
+  // Define global constants
+  define: {
+    'process.env': process.env,
+    'process.env.NODE_ENV': JSON.stringify(mode)
+  },
   plugins: [
-    react(),
+    react({
+      // Add React Refresh
+      fastRefresh: true,
+      // Use the new JSX runtime
+      jsxRuntime: 'automatic',
+      // Add Babel plugins for better browser compatibility
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-runtime', {
+            regenerator: true,
+          }],
+        ],
+      },
+    }),
     VitePWA({
+      // Enable in development for testing
+      registerType: 'autoUpdate',
+      // Enable in development for testing
+      devOptions: {
+        enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html',
+      },
       // Basic PWA configuration
       registerType: 'prompt',
       injectRegister: 'auto',
@@ -99,8 +129,8 @@ export default defineConfig(({ mode }) => ({
       },
       // Self-destroying service worker for development
       selfDestroying: mode === 'development',
-      // Disable workbox logging in production
-      disable: mode !== 'production',
+      // Enable in all environments
+      disable: false,
       // Don't register the service worker automatically - we'll do it manually
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg}']
@@ -116,7 +146,19 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     sourcemap: mode === 'development',
-    minify: mode === 'production' ? 'esbuild' : false,
+    // Minification and compatibility settings
+    target: 'es2015',
+    cssCodeSplit: true,
+    minify: mode === 'production' ? 'terser' : false,
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+      },
+      format: {
+        comments: false,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -134,7 +176,13 @@ export default defineConfig(({ mode }) => ({
     port: 3000,
     open: mode === 'development',
     cors: true,
-    host: true
+    host: true,
+    // Enable HMR
+    hmr: {
+      overlay: true,
+    },
+    // Handle SPA fallback
+    historyApiFallback: true,
   },
   // Preview server configuration
   preview: {

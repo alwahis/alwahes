@@ -93,22 +93,68 @@ async function initializeApp() {
       </React.StrictMode>
     );
 
+    // Register service worker with better error handling
+    const registerServiceWorker = async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          console.log('Registering service worker...');
+          
+          await serviceWorkerRegistration.register({
+            onUpdate: (registration) => {
+              console.log('New service worker update found');
+              if (registration.waiting) {
+                // The service worker has an update ready
+                if (window.confirm('A new version is available! Refresh to update?')) {
+                  registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  
+                  // Ensure the page is refreshed when the new service worker takes over
+                  const refreshPage = () => window.location.reload();
+                  navigator.serviceWorker.addEventListener('controllerchange', refreshPage, { once: true });
+                  
+                  // Send a message to the waiting service worker
+                  const channel = new MessageChannel();
+                  channel.port1.onmessage = (event) => {
+                    if (event.data && event.data.type === 'SKIP_WAITING') {
+                      console.log('Skipping waiting phase');
+                    }
+                  };
+                  registration.waiting.postMessage({ type: 'SKIP_WAITING' }, [channel.port2]);
+                }
+              }
+            },
+            onSuccess: (registration) => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              
+              // Check for updates immediately
+              registration.update().catch(err => {
+                console.log('Error checking for updates:', err);
+              });
+            },
+          });
+          
+          // Check for updates every hour
+          setInterval(() => {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.update().catch(err => {
+                console.log('Background update check failed:', err);
+              });
+            });
+          }, 60 * 60 * 1000);
+        }
+      } catch (error) {
+        console.error('Service worker registration failed:', error);
+      }
+    };
+    
     // Register service worker in production only
     if (process.env.NODE_ENV === 'production') {
-      serviceWorkerRegistration.register({
-        onUpdate: (registration) => {
-          if (registration.waiting) {
-            // The service worker has an update ready
-            if (window.confirm('A new version is available! Refresh to update?')) {
-              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
-            }
-          }
-        },
-        onSuccess: (registration) => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        },
-      });
+      // Use requestIdleCallback if available, otherwise run immediately
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(registerServiceWorker);
+      } else {
+        // Wait for the page to be fully loaded
+        window.addEventListener('load', registerServiceWorker);
+      }
     }
   } catch (error) {
     console.error('Failed to initialize app:', error);
