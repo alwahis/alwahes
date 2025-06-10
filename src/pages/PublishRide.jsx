@@ -210,11 +210,14 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
               variant="h5" 
               component="h1" 
               gutterBottom 
-              align="right"
+              align="center"
               sx={{ 
                 mb: 4,
-                fontWeight: 'medium',
-                color: 'text.primary' 
+                fontWeight: 'bold',
+                color: 'text.primary',
+                fontSize: '2rem',
+                textAlign: 'center',
+                width: '100%'
               }}
             >
               نشر رحلة جديدة

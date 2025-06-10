@@ -9,7 +9,7 @@
     "url": "https://github.com/alwahis/alwahes.git"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "vite build --mode production",
     "preview": "vite preview",
     "postinstall": "vite build",

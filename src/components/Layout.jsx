@@ -94,18 +94,31 @@ const Layout = ({ children, title }) => {
               </Typography>
             )}
 
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto' }}>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, ml: 'auto', gap: 1 }}>
               {pages.map((page) => (
                 <Button
                   key={page.path}
+                  variant={page.path === '/publish-ride' || page.path === '/request-ride' ? 'contained' : 'text'}
+                  color={page.path === '/publish-ride' ? 'secondary' : 'inherit'}
+                  startIcon={page.path === '/publish-ride' ? <DirectionsCar /> : page.path === '/request-ride' ? <Search /> : null}
                   onClick={() => navigate(page.path)}
                   sx={{ 
-                    my: 2, 
-                    color: 'white', 
+                    my: 2,
+                    color: 'white',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    px: 2,
+                    ...(page.path === '/publish-ride' && {
+                      boxShadow: 2,
+                    }),
                     display: 'block',
                     backgroundColor: location.pathname === page.path ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    '&:hover': page.path === '/publish-ride' ? {
+                      backgroundColor: 'secondary.dark',
+                      boxShadow: 4,
+                    } : {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)'
                     },
                   }}
                 >

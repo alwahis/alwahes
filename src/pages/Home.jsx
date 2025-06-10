@@ -10,6 +10,7 @@ const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+
   // Structured data for rich results
   const structuredData = {
     "@context": "https://schema.org",
@@ -52,8 +53,10 @@ const Home = () => {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: { xs: 3, md: 5 },
-            py: { xs: 2, md: 4 },
+            gap: { xs: 2, sm: 3, md: 5 },
+            py: { xs: 2, sm: 3, md: 4 },
+            px: { xs: 1, sm: 2, md: 4 },
+            width: '100%'
           }}
         >
           <Box
@@ -61,9 +64,9 @@ const Home = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              mb: 2,
+              mb: { xs: 2, sm: 3 },
               width: '100%',
-              maxWidth: '350px'
+              maxWidth: { xs: '300px', sm: '350px' }
             }}
           >
             <img
@@ -83,9 +86,9 @@ const Home = () => {
             align="center"
             color="text.secondary"
             sx={{
-              maxWidth: '600px',
-              mb: 4,
-              fontSize: { xs: '1.1rem', md: '1.3rem' },
+              maxWidth: { xs: '300px', sm: '400px', md: '600px' },
+              mb: { xs: 3, sm: 4 },
+              fontSize: { xs: '1rem', sm: '1.1rem', md: '1.3rem' },
               lineHeight: 1.6,
             }}
           >
@@ -95,10 +98,11 @@ const Home = () => {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-              gap: 4,
+              gridTemplateColumns: '1fr',
+              gap: 2,
               width: '100%',
-              maxWidth: '800px',
+              maxWidth: '350px',
+              mb: 2
             }}
           >
             <Paper

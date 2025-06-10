@@ -21,7 +21,7 @@ import { Analytics } from '@vercel/analytics/react';
 import InstallPWA from './components/InstallPWA';
 import MobileNavBar from './components/MobileNavBar';
 import NetworkStatus from './components/NetworkStatus';
-import PullToRefresh from './components/PullToRefresh';
+
 import OfflineManager from './components/OfflineManager';
 import AppUpdater from './components/AppUpdater';
 import { useState } from 'react';
@@ -47,7 +47,7 @@ function App() {
             <CssBaseline />
             <Router>
               <Toaster
-                position="top-center"
+                position="top-right"
                 toastOptions={{
                   style: {
                     background: theme.palette.background.paper,
@@ -64,23 +64,21 @@ function App() {
               <NetworkStatus />
               <OfflineManager />
               <AppUpdater />
-              <PullToRefresh onRefresh={handleRefresh}>
-                <Box sx={{ pb: { xs: '56px', sm: 0 } }}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/landing" element={<LandingPage />} />
-                    <Route path="/search-results" element={<SearchResults />} />
-                    <Route path="/results" element={<SearchResults />} />
-                    <Route path="/publish-ride" element={<PublishRide />} />
-                    <Route path="/my-rides" element={<MyRides />} />
-                    <Route path="/request-ride" element={<RequestRide />} />
-                    <Route path="/matching-requests" element={<MatchingRequests />} />
-                    <Route path="/all-ride-requests" element={<AllRideRequests />} />
-                    <Route path="/test-rides" element={<TestRides />} />
-                  </Routes>
-                  <MobileNavBar />
-                </Box>
-              </PullToRefresh>
+              <Box sx={{ pb: { xs: '56px', sm: 0 } }}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/search-results" element={<SearchResults />} />
+                  <Route path="/publish-ride" element={<PublishRide />} />
+                  <Route path="/my-rides" element={<MyRides />} />
+                  <Route path="/request-ride" element={<RequestRide />} />
+                  <Route path="/matching-requests" element={<MatchingRequests />} />
+                  <Route path="/all-ride-requests" element={<AllRideRequests />} />
+                  <Route path="/test" element={<Test />} />
+                  <Route path="/test-rides" element={<TestRides />} />
+                  <Route path="/landing" element={<LandingPage />} />
+                </Routes>
+                <MobileNavBar />
+              </Box>
             </Router>
           </LocalizationProvider>
         </ThemeProvider>
