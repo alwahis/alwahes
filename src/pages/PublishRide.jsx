@@ -24,6 +24,17 @@ import moment from 'moment';
 import 'moment/locale/ar';
 import Layout from '../components/Layout';
 import { createRide, getMatchingRideRequests } from '../services/airtable';
+import { uploadImage } from '../utils/cloudinary';
+
+// Helper function to convert file to base64 (keeping this for potential future use)
+const convertToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
 import { createRideToken } from '../utils/deviceHistory';
 import { toast } from 'react-hot-toast';
 import { isValidPhoneNumber } from '../utils/phoneNumber';
@@ -77,9 +88,27 @@ function PublishRide() {
     whatsappNumber: '',
     note: '',
     carType: '',
+    image: null,
+    startingCity: '',
+    destinationCity: ''
   });
   
+  const [imagePreview, setImagePreview] = useState(null);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData(prev => ({
+          ...prev,
+          image: file
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -138,27 +167,48 @@ function PublishRide() {
       const formattedDate = formatDate(formData.date);
       console.log('Publishing ride with date:', formattedDate);
 
+      // Upload image to Cloudinary if exists
+      let imageData = [];
+      if (formData.image) {
+        try {
+          const uploadResult = await uploadImage(formData.image);
+          console.log('Image uploaded to Cloudinary:', uploadResult);
+          
+          // Format the image data for Airtable
+          imageData = [{
+            url: uploadResult.secure_url,
+            filename: `car-${Date.now()}.${uploadResult.format}`
+          }];
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('حدث خطأ أثناء رفع الصورة. الرجاء المحاولة مرة أخرى.');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Add all the regular fields
       const rideData = {
         'Name of Driver': formData.name,
         'Starting city': formData.from,
         'Destination city': formData.to,
         'Date': formattedDate,
-        'Time': '12:00 PM', // Default time since we removed the time picker
+        'Time': '12:00 PM',
         'Seats Available': "4",
         'Price per Seat': String(formData.price),
         'WhatsApp Number': formData.whatsappNumber,
         'Car Type': formData.carType,
         'Note': formData.note || '',
-        'Status': 'Active'
+        'Status': 'Active',
+        'image': imageData // Changed from 'Images' to 'image' to match Airtable field name
       };
-      
-      // Image upload feature has been removed
 
+      console.log('Submitting ride data:', JSON.stringify(rideData, null, 2));
       const newRide = await createRide(rideData);
       
-      if (newRide) {
-        await createRideToken(formData.whatsappNumber, 'published', newRide.id, rideData);
+      if (newRide && newRide.records && newRide.records[0]) {
+        const rideId = newRide.records[0].id;
+        await createRideToken(formData.whatsappNumber, 'published', rideId, rideData);
         toast.success('تم نشر الرحلة بنجاح');
         
         // Navigate to matching requests page
@@ -335,17 +385,38 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                 />
 
                 <TextField
+                  fullWidth
                   label="نوع السيارة *"
                   name="carType"
                   value={formData.carType}
                   onChange={handleChange}
                   required
-                  fullWidth
-                  size="medium"
+                  sx={{ mb: 2 }}
+                  placeholder="مثال: تويوتا كامري 2020"
                   InputProps={{
                     sx: { bgcolor: 'background.paper' }
                   }}
                 />
+
+                <Box sx={{ mb: 2 }}>
+                  <FormLabel component="legend">صورة السيارة (اختياري)</FormLabel>
+                  <Input
+                    type="file"
+                    inputProps={{ accept: 'image/*' }}
+                    onChange={handleImageChange}
+                    sx={{ mt: 1 }}
+                  />
+                  {imagePreview && (
+                    <Box sx={{ mt: 2, maxWidth: '100%' }}>
+                      <img 
+                        src={imagePreview} 
+                        alt="Car preview" 
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }} 
+                      />
+                    </Box>
+                  )}
+                </Box>
+
 
                 <TextField
                   label="السعر للمقعد الواحد *"
