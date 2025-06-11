@@ -17,6 +17,7 @@ import {
   FormLabel,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+// Using moment's built-in Arabic locale
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -262,7 +263,17 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
 
   return (
     <Layout>
-      <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="ar">
+      <LocalizationProvider 
+        dateAdapter={AdapterMoment}
+        adapterLocale="ar"
+        localeText={{
+          cancelButtonLabel: 'إلغاء',
+          okButtonLabel: 'تم',
+          clearButtonLabel: 'مسح',
+          todayButtonLabel: 'اليوم',
+          openTimePickerDialogue: (time, isUpdating) => 
+            isUpdating ? `تعديل الوقت ${time}` : `اختر الوقت ${time}`,
+        }}>
         <Container maxWidth="sm">
           <Box sx={{ mt: 4, mb: 4 }}>
             <Typography 
@@ -385,9 +396,9 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                       setError('');
                     }}
                     ampm={true}
-                    ampmInClock={true}
-                    views={['hours']}
-                    format="hh:mm A"
+                    ampmInClock={false}
+                    views={['hours', 'minutes']}
+                    format={formData.time?.format('A') === 'AM' ? 'hh:mm ص' : 'hh:mm م'}
                     slotProps={{
                       textField: {
                         required: true,
