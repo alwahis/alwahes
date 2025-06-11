@@ -108,78 +108,82 @@ export async function createRide(rideData) {
         throw new Error(`الحقل ${field} مطلوب`);
       }
     }
-    
-    // Image upload feature has been removed
-    // Remove any image fields if they exist
-    delete rideData['image'];
-    delete rideData['imageUrl'];
-    delete rideData['imageAttachment'];
+
+    // Prepare the fields object
+    const fields = {
+      'Name of Driver': rideData['Name of Driver'],
+      'Starting city': rideData['Starting city'],
+      'starting area': rideData['starting area'] || '',
+      'Destination city': rideData['Destination city'],
+      'destination area': rideData['destination area'] || '',
+      'Date': rideData['Date'],
+      'Time': rideData['Time'],
+      'Seats Available': rideData['Seats Available'],
+      'Price per Seat': rideData['Price per Seat'],
+      'WhatsApp Number': rideData['WhatsApp Number'],
+      'Description': rideData['Description'] || '',
+      'Car Type': rideData['Car Type'] || ''
+      // Removed 'Status' field as it's causing 422 error
+      // Add it back if you've created the column in Airtable
+    };
+
+    // Handle image upload if provided
+    if (rideData['image'] && rideData['image'].length > 0) {
+      const imageData = rideData['image'][0];
+      fields['image'] = [{
+        url: imageData.url,
+        filename: `car-${Date.now()}.jpg`
+      }];
+    }
 
     const requestBody = {
-      records: [
-        {
-          fields: {
-            'Name of Driver': rideData['Name of Driver'],
-            'Starting city': rideData['Starting city'],
-            'starting area': rideData['starting area'] || '',
-            'Destination city': rideData['Destination city'],
-            'destination area': rideData['destination area'] || '',
-            'Date': rideData['Date'],
-            'Time': rideData['Time'],
-            'Seats Available': rideData['Seats Available'],
-            'Price per Seat': rideData['Price per Seat'],
-            'WhatsApp Number': rideData['WhatsApp Number'],
-            'Description': rideData['Description'] || '',
-            'Car Type': rideData['Car Type'] || '',
-          },
-        },
-      ],
+      records: [{ fields }]
     };
-    
-    // Image attachment feature has been removed
-    
+
     console.log('Creating ride with request body:', JSON.stringify(requestBody, null, 2));
     
-    // Log the exact table name and API key (with partial masking for security)
     const baseId = import.meta.env.VITE_AIRTABLE_BASE_ID;
     const apiKey = import.meta.env.VITE_AIRTABLE_API_KEY;
-    const maskedApiKey = apiKey.substring(0, 5) + '...' + apiKey.substring(apiKey.length - 5);
-    console.log(`Using Airtable Base ID: ${baseId}, API Key: ${maskedApiKey}`);
+    
+    console.log('Sending request to Airtable...');
+    console.log('Endpoint:', `https://api.airtable.com/v0/${baseId}/Published%20Rides`);
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(
-      `https://api.airtable.com/v0/${baseId}/Published Rides`,
+      `https://api.airtable.com/v0/${baseId}/Published%20Rides`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify(requestBody),
       }
     );
-    
-    console.log('Airtable response status:', response.status);
 
-    const responseData = await response.json();
+    console.log('Response status:', response.status);
     
     if (!response.ok) {
-      console.error('Airtable error response:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: responseData
-      });
-      
-      if (responseData.error) {
-        throw new Error(responseData.error.message || 'Unknown Airtable error');
-      } else {
-        throw new Error('Failed to create ride');
+      let errorMessage = 'فشل في إنشاء الرحلة';
+      try {
+        const errorData = await response.json();
+        console.error('Airtable error details:', errorData);
+        errorMessage = errorData.error?.message || errorMessage;
+      } catch (e) {
+        console.error('Error parsing error response:', e);
       }
+      throw new Error(`${errorMessage} (Status: ${response.status})`);
     }
 
-    return responseData.records[0];
+    const responseData = await response.json();
+    console.log('Airtable response:', responseData);
+    return responseData;
   } catch (error) {
     console.error('Error creating ride:', error);
-    throw error;
+    if (error.message.includes('Failed to fetch')) {
+        throw new Error('تعذر الاتصال بخادم Airtable. يرجى التحقق من اتصالك بالإنترنت.');
+      }
+      throw error;
   }
 }
 

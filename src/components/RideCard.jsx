@@ -5,6 +5,8 @@ import {
   Grid,
   Button,
   Box,
+  CardMedia,
+  CardActionArea,
 } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -14,6 +16,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AirlineSeatReclineNormalIcon from '@mui/icons-material/AirlineSeatReclineNormal';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PersonIcon from '@mui/icons-material/Person';
+import ImageIcon from '@mui/icons-material/Image';
 
 // Helper function to safely get field values with defaults
 const getFieldValue = (ride, fieldName, defaultValue = 'غير محدد') => {
@@ -43,89 +46,106 @@ const RideCard = ({ ride }) => {
     );
   };
 
+  // Get the first image URL if available
+  const imageUrl = ride.fields?.image?.[0]?.url || null;
+  
+  // Format the date for display
+  const formattedDate = new Date(date).toLocaleDateString('ar-IQ', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
     <Card elevation={3}>
-      <CardContent>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <PersonIcon color="primary" />
-              <Typography variant="h6" component="div" gutterBottom>
-                {driverName}
-              </Typography>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+        {/* Left side - Image */}
+        <Box sx={{ width: { xs: '100%', sm: '200px' }, flexShrink: 0 }}>
+          {imageUrl ? (
+            <CardActionArea onClick={() => window.open(imageUrl, '_blank')}>
+              <CardMedia
+                component="img"
+                image={imageUrl}
+                alt={`${carType} - ${driverName}`}
+                sx={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRight: { sm: '1px solid rgba(0, 0, 0, 0.12)' },
+                  borderBottom: { xs: '1px solid rgba(0, 0, 0, 0.12)', sm: 'none' }
+                }}
+              />
+            </CardActionArea>
+          ) : (
+            <Box 
+              sx={{
+                width: '100%',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                flexDirection: 'column',
+                gap: 1,
+                borderRight: { sm: '1px solid rgba(0, 0, 0, 0.12)' },
+                borderBottom: { xs: '1px solid rgba(0, 0, 0, 0.12)', sm: 'none' }
+              }}
+            >
+              <ImageIcon fontSize="large" />
+              <Typography variant="body2">لا توجد صورة</Typography>
             </Box>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <LocationOnIcon color="primary" />
-              <Typography>
-                من: {startPoint}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LocationOnIcon color="primary" />
-              <Typography>
-                إلى: {destination}
-              </Typography>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <EventIcon color="primary" />
-              <Typography>
-                التاريخ: {date}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AccessTimeIcon color="primary" />
-              <Typography>
-                الوقت: {time}
-              </Typography>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <AirlineSeatReclineNormalIcon color="primary" />
-              <Typography>
-                المقاعد المتاحة: {seatsAvailable}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AttachMoneyIcon color="primary" />
-              <Typography>
-                السعر لكل مقعد: {pricePerSeat} د.ع
-              </Typography>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <DirectionsCarIcon color="primary" />
-              <Typography>
-                نوع السيارة: {carType}
-              </Typography>
-            </Box>
+          )}
+        </Box>
+        
+        {/* Right side - Details */}
+        <Box sx={{ flex: 1, p: { xs: 2, sm: 3 }, overflow: 'hidden' }}>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <Box component="span" sx={{ fontWeight: 'medium' }}>الوقت:</Box> {time}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <Box component="span" sx={{ fontWeight: 'medium' }}>السائق:</Box> {driverName}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <Box component="span" sx={{ fontWeight: 'medium' }}>نوع السيارة:</Box> {carType}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              <Box component="span" sx={{ fontWeight: 'medium' }}>المقاعد المتاحة:</Box> {seatsAvailable}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2, color: 'primary.main', fontWeight: 'bold' }}>
+              السعر لكل مقعد: {pricePerSeat} د.ع
+            </Typography>
+            
             {description && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <Typography>
-                  ملاحظات: {description}
+              <Box sx={{ 
+                backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                p: 2,
+                borderRadius: 1,
+                borderRight: '3px solid',
+                borderColor: 'primary.main',
+                mb: 2
+              }}>
+                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                  {description}
                 </Typography>
               </Box>
             )}
+            
             <Button
               variant="contained"
               startIcon={<WhatsAppIcon />}
               onClick={handleWhatsAppClick}
               fullWidth
+              size="large"
+              sx={{ mt: 2, py: 1.5 }}
             >
               تواصل عبر الواتساب
             </Button>
-          </Grid>
-        </Grid>
-      </CardContent>
+          </Box>
+          
+        </Box>
+      </Box>
     </Card>
   );
 };
