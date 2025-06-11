@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import moment from 'moment';
@@ -84,6 +85,7 @@ function PublishRide() {
     from: '',
     to: '',
     date: moment(),
+    time: moment().set({ hour: 12, minute: 0 }), // Default to 12:00 PM
     price: '',
     whatsappNumber: '',
     note: '',
@@ -119,6 +121,13 @@ function PublishRide() {
     }));
     
     setError('');
+  };
+
+  const handleTimeChange = (time) => {
+    setFormData((prev) => ({
+      ...prev,
+      time,
+    }));
   };
 
   const validateForm = () => {
@@ -334,39 +343,68 @@ ${formData.note ? `- ملاحظات: ${formData.note}` : ''}
                   ))}
                 </TextField>
 
-                <DatePicker
-                  label="التاريخ *"
-                  value={formData.date}
-                  onChange={(newValue) => {
-                    setFormData((prev) => ({ ...prev, date: newValue }));
-                    setError('');
-                  }}
-                  format="YYYY/MM/DD"
-                  slotProps={{
-                    textField: {
-                      required: true,
-                      fullWidth: true,
-                      placeholder: "مثال: 2025/01/23",
-                      helperText: "السنة/الشهر/اليوم",
-                      error: Boolean(error && !formData.date),
-                      dir: 'ltr',
-                      size: "medium",
-                      sx: {
-                        '& .MuiInputBase-root': {
-                          bgcolor: 'background.paper'
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <DatePicker
+                    label="التاريخ *"
+                    value={formData.date}
+                    onChange={(newValue) => {
+                      setFormData((prev) => ({ ...prev, date: newValue }));
+                      setError('');
+                    }}
+                    format="YYYY/MM/DD"
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true,
+                        placeholder: "مثال: 2025/01/23",
+                        helperText: "السنة/الشهر/اليوم",
+                        error: Boolean(error && !formData.date),
+                        dir: 'ltr',
+                        size: "medium",
+                        sx: {
+                          '& .MuiInputBase-root': {
+                            bgcolor: 'background.paper'
+                          }
+                        }
+                      },
+                      mobilePaper: {
+                        sx: {
+                          '& .MuiPickersCalendarHeader-label': {
+                            fontSize: '1rem'
+                          }
                         }
                       }
-                    },
-                    mobilePaper: {
-                      sx: {
-                        '& .MuiPickersCalendarHeader-label': {
-                          fontSize: '1rem'
+                    }}
+                    minDate={moment()}
+                  />
+                  <TimePicker
+                    label="الوقت *"
+                    value={formData.time}
+                    onChange={(newValue) => {
+                      setFormData((prev) => ({ ...prev, time: newValue }));
+                      setError('');
+                    }}
+                    ampm={true}
+                    ampmInClock={true}
+                    views={['hours']}
+                    format="hh:mm A"
+                    slotProps={{
+                      textField: {
+                        required: true,
+                        fullWidth: true,
+                        placeholder: "مثال: 02:30 م",
+                        helperText: "الساعة:الدقيقة",
+                        dir: 'ltr',
+                        size: 'medium',
+                        sx: {
+                          '& .MuiInputBase-root': {
+                            bgcolor: 'background.paper'
+                          }
                         }
                       }
-                    }
-                  }}
-                  minDate={moment()}
-                />
+                    }}
+                  />
+                </Box>
 
                 <TextField
                   label="رقم الواتساب *"
